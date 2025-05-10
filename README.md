@@ -1,2 +1,2 @@
 # Siguelineas-Bsic
-v0.1 **
+v0.3
