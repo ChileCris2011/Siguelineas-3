@@ -7,22 +7,48 @@ void inicializarQTR() {  //inicializar QTR
 }
 
 void seguidorDeLineas() {
-  if (sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, N, N, B, B, B, B, x
-    Motor(0, 70);
-  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] > umbral && sensorValues[6] > umbral) {  // x, B, B, B, B, N, N, x
-    Motor(70, 0);
-  } else if (sensorValues[1] < umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, B, N, N, B, B, B, x
-    Motor(0, 60);
-  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] < umbral) {  // x, B, B, B, N, N, B, x
-    Motor(60, 0);
-  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, B, B, B, N, N, B, x
-    Motor(70, 70);
-
-  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {
+  if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // -----> x, B, B, B, B, B, B, x
     Motor(65, 65);
+  } else if (sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, N, N, B, B, B, B, x
+    Motor(0, 80);
+  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] > umbral && sensorValues[6] > umbral) {  // x, B, B, B, B, N, N, x
+    Motor(80, 0);
+  } else if (sensorValues[1] < umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, B, N, N, B, B, B, x
+    Motor(0, 70);
+  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] < umbral) {  // x, B, B, B, N, N, B, x
+    Motor(70, 0);
+  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, B, B, N, N, B, B, x
+    Motor(70, 70);
+  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] < umbral) {  // x, B, B, B, N, N, B, x
+    Motor(70, 0);
+  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // x, B, B, N, N, B, B, x
+    Motor(70, 70);
+  }
+}
+void IZQ90() {
+  Motor(90, 90);
+  delay(333);
+  if (flag == 0) {
+    while (!(sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral)) {  // x, x, N, N, B, B, B, x)
+      sigueLineas.read(sensorValues);
+      Motor(160, -80);
+    }
+  } else {
+    Motor(90, 90);
+    delay(333);
   }
 }
 
+void DER90() {
+  Motor(90, 90);
+  delay(333);
+  while (!(sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] > umbral && sensorValues[5] > umbral)) {  // x, B, B, B, N, N, x, x)
+    sigueLineas.read(sensorValues);
+    Motor(-80, 160);
+  }
+}
+
+//void indicador(int inter) {
 
 
 /*

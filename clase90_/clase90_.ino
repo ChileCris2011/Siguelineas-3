@@ -21,6 +21,8 @@ const int umbral = 3000;
 
 int intersecciones = 0;
 
+int flag = 0;
+
 void setup() {
   Serial.begin(9600);
   inicializarQTR();
@@ -39,51 +41,21 @@ void loop() {
     SerialBT.print(intersecciones);
     SerialBT.print('\n');
   */
-  if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] < umbral && sensorValues[4] < umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {
-    Motor(65, 65);
-  } else if (sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] > umbral) {
+  if (sensorValues[0] > umbral && sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] > umbral && sensorValues[7] > umbral) {  // N, N, N, N, N, N, N, N
     intersecciones++;
+    SerialBT.println(intersecciones);
     Motor(75, 75);
     delay(333);
-  }  else if (sensorValues[0] > umbral && sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3]  > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral && sensorValues[7] < umbral) {
-    Motor(0, 0);
-    delay(1000);
-    Motor(-50,150);
-    delay(1000);
-    SerialBT.print("izf");
-    //izF
-  }
-  else if (sensorValues[0] < umbral && sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] > umbral && sensorValues[7] > umbral) {
-    Motor(0, 0);
-    delay(1000);
-    Motor(150, -50);
-    delay(1000);
-        SerialBT.print("der");
-    //deF
-  }
-  else {
+  } else if (sensorValues[0] > umbral && sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // N, N, N, N, N, B, B, x
+    IZQ90();
+  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] > umbral && sensorValues[7] > umbral) {  // x, B, B, N, N, N, N, N
+    DER90();
+  } else {
     seguidorDeLineas();
   }
-  
 }
 /*
-  if (sensorValues[0] > umbral) {
-    Motor(10, -100);
-  } else if (sensorValues[7] > umbral) {
-    Motor(-100, 10);
-  }
-
-    Motor(50, 50);
-    delay(666);
-    Motor(-60, 60);
-    delay(1333);
-    Motor(50, 50);
-    delay(100);
-
-    Motor(50, 50);
-    delay(666);
-    Motor(60, -60);
-    delay(1333);
-    Motor(50, 50);
-    delay(100);
+* Para añadir un cuadrado con indicador:
+*    indicador(x);
+* Siendo x la cantidad de intersecciones anteriores + 1
 */
