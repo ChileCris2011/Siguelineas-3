@@ -17,11 +17,10 @@ uint16_t sensorValues[SensorCount];
 const int freq = 5000;
 const int resolution = 8;
 
-const int umbral = 3000;
+const int umbral = 3333;
 
 int intersecciones = 0;
 
-int flag = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -41,14 +40,14 @@ void loop() {
     SerialBT.print(intersecciones);
     SerialBT.print('\n');
   */
-  if (sensorValues[0] > umbral && sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] > umbral && sensorValues[7] > umbral) {  // N, N, N, N, N, N, N, N
+  if (sensorValues[0] > umbral && sensorValues[7] > umbral) {  // N, x, x, x, x, x, x, N
     intersecciones++;
     SerialBT.println(intersecciones);
     Motor(75, 75);
     delay(333);
-  } else if (sensorValues[0] > umbral && sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] < umbral && sensorValues[6] < umbral) {  // N, N, N, N, N, B, B, x
+  } else if (sensorValues[0] > umbral && sensorValues[1] > umbral && sensorValues[6] < umbral && sensorValues[7] < umbral) {  // N, N, x, x, x, x, B, B
     IZQ90();
-  } else if (sensorValues[1] < umbral && sensorValues[2] < umbral && sensorValues[3] > umbral && sensorValues[4] > umbral && sensorValues[5] > umbral && sensorValues[6] > umbral && sensorValues[7] > umbral) {  // x, B, B, N, N, N, N, N
+  } else if (sensorValues[0] < umbral && sensorValues[1] < umbral && sensorValues[6] > umbral && sensorValues[6] > umbral) {  // B, B, x, x, x, x, N, N
     DER90();
   } else {
     seguidorDeLineas();
