@@ -24,5 +24,7 @@ void loop() {
   sigueLineas.read(sensorValues);
   for (int i = 0; i < 8; i++){
     SerialBT.print(sensorValues[i]);
+    SerialBT.print("  ");
   }
+  SerialBT.print('\n');
 }
