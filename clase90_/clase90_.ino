@@ -61,6 +61,9 @@ void loop() {
         SerialBT.print("der");
     //deF
   }
+  else {
+    seguidorDeLineas();
+  }
   
 }
 /*
