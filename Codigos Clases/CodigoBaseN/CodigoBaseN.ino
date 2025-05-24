@@ -1,5 +1,8 @@
 #include "pines.h"
 
+#include <Wire.h>
+#include <Adafruit_VL53L0X.h>
+
 #include <QTRSensors.h>
 #include <BluetoothSerial.h>
 
@@ -11,6 +14,9 @@ int contador = 0;
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run make menuconfig to and enable it
 #endif
+
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
+
 
 BluetoothSerial SerialBT;
 QTRSensors qtr;
@@ -25,9 +31,9 @@ void setup() {
   inicializarMotores();
 
   qtr.setTypeAnalog();
-  qtr.setSensorPins((const uint8_t[]) {
-    36, 39, 34, 35, 32, 33, 25, 26
-  }, SensorCount);
+  qtr.setSensorPins((const uint8_t[]){
+                      36, 39, 34, 35, 32, 33, 25, 26 },
+                    SensorCount);
   qtr.setEmitterPin(27);
   pinMode(LED, OUTPUT);
 
@@ -41,6 +47,14 @@ void setup() {
 
   Serial.begin(115200);
   SerialBT.begin("Valor Absoluto de 3");
+
+  if (!lox.begin()) {
+    Serial.println(F("¡Error de inicio de V53L0X! Verifica las conexiones."));
+    while (1)
+      ;  // Detiene el programa si no se puede inicializar el sensor
+  }
+
+  Serial.println(F("VL53L0X iniciado correctamente"));
 
   while (digitalRead(BOTON) == 0) {
   }
@@ -124,6 +138,40 @@ void loop() {
   }
   /////////////////////////////////
 
+  VL53L0X_RangingMeasurementData_t measure;  //Declara la variable para almacenar los datos de la medición
+
+  //Realiza la medición de distancia y almacena los resultados en la variable 'measure'
+  lox.rangingTest(&measure, false);
+
+  if (measure.RangeStatus != 4) {
+    if (measure.RangeMilliMeter < 120) {
+      Motor(0, 0);
+      delay(2000);
+      Motor(-80, 80);  //giro d
+      delay(700);
+      Motor(0, 0);
+      delay(2000);
+      Motor(50, 50);
+      delay(500);
+      Motor(80, -80);  //giro i
+      delay(700);
+      Motor(0, 0);
+      delay(2000);
+      Motor(50, 50);
+      delay(800);
+      Motor(80, -80);  //giro i
+      delay(700);
+      Motor(0, 0);
+      delay(2000);
+      Motor(50, 50);
+      delay(500);
+      Motor(-80, 80);  //giro d
+      delay(700);
+      Motor(50, 50);
+      delay(100);
+    }
+  }
+
   ////////////////////////////////
   if (posicion >= -50 && posicion <= 50) {
     Motor(50, 50);
@@ -142,5 +190,4 @@ void loop() {
   Serial.println('\t');
   SerialBT.print("Contador: ");
   SerialBT.println(contador);
-  SerialBT.println(derecha);
 }
