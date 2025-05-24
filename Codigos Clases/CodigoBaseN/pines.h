@@ -5,3 +5,7 @@
 #define BIN1 5
 #define BIN2 18
 #define PWMB 19
+
+#define BOTON 12
+
+#define LED 2

@@ -1,3 +1,5 @@
+#include "pines.h"
+
 #include <QTRSensors.h>
 #include <BluetoothSerial.h>
 
@@ -5,7 +7,6 @@ const int freq = 5000;
 const int resolution = 8;
 int umbral = 3500;
 int contador = 0;
-#define BOTON 12
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run make menuconfig to and enable it
@@ -16,7 +17,6 @@ QTRSensors qtr;
 
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
-#define LED 2
 
 int ultimaPosicion = 0;
 
@@ -40,7 +40,7 @@ void setup() {
   }
 
   Serial.begin(115200);
-  SerialBT.begin("POYO");
+  SerialBT.begin("|3|");
 
   while (digitalRead(BOTON) == 0) {
   }
@@ -57,7 +57,7 @@ void loop() {
     delay(200);
     Motor(50, 50);
     delay(500);
-    Motor(80, -80);  //giro izq
+    Motor(80, -80);  //giro izquierda
     delay(700);
     Motor(50, 50);
     delay(100);
@@ -78,7 +78,7 @@ void loop() {
     delay(200);
     Motor(50, 50);
     delay(500);
-    Motor(-80, 80);  //giro der
+    Motor(-80, 80);  //giro derecha
     delay(700);
     Motor(50, 50);
     delay(100);
