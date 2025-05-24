@@ -31,8 +31,8 @@ void loop() {
   //Verifica si la medición es válida
   if (measure.RangeStatus != 4) {  // Si el estado es diferente a 4, la medición es válida
     SerialBT.print("Distancia: ");
-    SerialBT.print(measure.RangeMilliMeter)  // Imprime la distancia medida en milímetros
-      SerialBT.println(" mm");
+    SerialBT.print(measure.RangeMilliMeter);  // Imprime la distancia medida en milímetros
+    SerialBT.println(" mm");
   } else {
     SerialBT.println("Fuera de rango");
   }
