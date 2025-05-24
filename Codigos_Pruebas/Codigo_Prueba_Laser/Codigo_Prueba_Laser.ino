@@ -9,17 +9,18 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 BluetoothSerial SerialBT;
 
 void setup() {
-  SerialBT.println("Iniciando...");
+  Serial.begin(115200);
+  //SerialBT.begin("Valor Absoluto de 3");
 
-  SerialBT.begin("|3|");
+  Serial.println("Iniciando...");
 
   // Inicia la comunicacion I2C con el sensor
   if (!lox.begin()) {
-    SerialBT.println(F("¡Error de inicio de V53L0X! Verifica las conexiones."));
+    Serial.println(F("¡Error de inicio de V53L0X! Verifica las conexiones."));
     while (1);  // Detiene el programa si no se puede inicializar el sensor
   }
 
-  SerialBT.println(F("VL53L0X iniciado correctamente"));
+  Serial.println(F("VL53L0X iniciado correctamente"));
 }
 
 void loop() {
@@ -30,11 +31,11 @@ void loop() {
 
   //Verifica si la medición es válida
   if (measure.RangeStatus != 4) {  // Si el estado es diferente a 4, la medición es válida
-    SerialBT.print("Distancia: ");
-    SerialBT.print(measure.RangeMilliMeter);  // Imprime la distancia medida en milímetros
-    SerialBT.println(" mm");
+    Serial.print("Distancia: ");
+    Serial.print(measure.RangeMilliMeter * 10);  // Imprime la distancia medida en centímetros
+    Serial.println(" cm");
   } else {
-    SerialBT.println("Fuera de rango");
+    Serial.println("Fuera de rango");
   }
 
   delay(100);  // Espera 0.1 segundos entre lecturas para evitar sobrecargar el sistema

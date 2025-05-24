@@ -40,7 +40,7 @@ void setup() {
   }
 
   Serial.begin(115200);
-  SerialBT.begin("|3|");
+  SerialBT.begin("Valor Absoluto de 3");
 
   while (digitalRead(BOTON) == 0) {
   }
