@@ -9,5 +9,5 @@ void setup() {
   }
 }
 void loop() {
-  Motor(100, 100);
+  Motor(-100, -100);
 }

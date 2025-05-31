@@ -13,26 +13,26 @@ void inicializarMotores() {
 
 void Motoriz(int valueiz) {
   if (valueiz >= 0) {
-    digitalWrite(BIN1, HIGH);
-    digitalWrite(BIN2, LOW);
-  } else {
     digitalWrite(BIN1, LOW);
     digitalWrite(BIN2, HIGH);
+  } else {
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
     valueiz = valueiz * -1;
   }
-  ledcWrite(0, valueiz);
+  ledcWrite(1, valueiz);
 }
 // Función accionamiento motor derecho
 void Motorde(int valueder) {
   if (valueder >= 0) {
-    digitalWrite(AIN1, LOW);
-    digitalWrite(AIN2, HIGH);
-  } else {
     digitalWrite(AIN1, HIGH);
     digitalWrite(AIN2, LOW);
+  } else {
+    digitalWrite(AIN1, LOW);
+    digitalWrite(AIN2, HIGH);
     valueder = valueder * -1;
   }
-  ledcWrite(1, valueder);
+  ledcWrite(0, valueder);
 }
 
 //Accionamiento de motores

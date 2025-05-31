@@ -18,7 +18,7 @@ void Motoriz(int valueiz) {
   } else {
     digitalWrite(BIN1, HIGH);
     digitalWrite(BIN2, LOW);
-    //valueiz = valueiz * -1;
+    valueiz = valueiz * -1;
   }
   ledcWrite(0, valueiz);
 }
