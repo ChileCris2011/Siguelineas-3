@@ -36,7 +36,7 @@ void loop() {
   lox.rangingTest(&measure, false);
 
   //Verifica si la medición es válida
-
+  /*
   if (measure.RangeStatus != 4) {  // Si el estado es diferente a 4, la medición es válida
     Serial.print("Distancia: ");
     Serial.print(measure.RangeMilliMeter * 10);  // Imprime la distancia medida en centímetros
@@ -46,4 +46,35 @@ void loop() {
   }
 
   delay(100);  // Espera 0.1 segundos entre lecturas para evitar sobrecargar el sistema
+  */
+  if (measure.RangeStatus != 4) {
+    if (measure.RangeMilliMeter < 100) {
+      Motor(0, 0);
+      delay(100);
+      Motor(0, -80);  //giro d
+      delay(1500);
+      Motor(0, 0);
+      delay(100);
+      /*
+      Motor(50, 50);
+      delay(500);
+      Motor(80, -80);  //giro i
+      delay(1500);
+      Motor(0, 0);
+      delay(2000);
+      Motor(50, 50);
+      delay(800);
+      Motor(80, -80);  //giro i
+      delay(1500);
+      Motor(0, 0);
+      delay(2000);
+      Motor(50, 50);
+      delay(500);
+      Motor(-80, 80);  //giro d
+      delay(1500);
+      Motor(50, 50);
+      delay(100);
+      */
+    }
+  }
 }
