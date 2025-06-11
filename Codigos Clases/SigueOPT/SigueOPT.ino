@@ -22,15 +22,15 @@ const int lIntersecciones = 3;               // Longitud de intersecciones (para
 
 const int evasión = 8;  //Hito de evasión (Hito antes a la evasión del obstáculo + 1)
 
-const int final = 24;  //Hito final (Hito de la meta)
+const int hFinal = 19;  //Hito final (Hito de la meta)
 
-const int primeraMarca = 0;  //Hito donde se avisa la dirección de un cuadrado. Dejar en -1 si debe ser ignorada
-const int segundaMarca = 0;  //Hito donde se avisa la dirección de un segundo cuadrado. Dejar en -1 si no hay o debe ser ignorada
+const int primeraMarca = 1;  //Hito donde se avisa la dirección de un cuadrado. Dejar en -1 si debe ser ignorada
+const int segundaMarca = 2;  //Hito donde se avisa la dirección de un segundo cuadrado. Dejar en -1 si no hay o debe ser ignorada
 
-const int primerCuadrado = 0;   //Hito donde empieza el primer cuadrado. Dejar en -1 si no hay
-const int segundoCuadrado = 0;  //Hito donde empieza el segundo cuadrado. Dejar en -1 si no hay
+const int primerCuadrado = 17;   //Hito donde empieza el primer cuadrado. Dejar en -1 si no hay
+const int segundoCuadrado = 18;  //Hito donde empieza el segundo cuadrado. Dejar en -1 si no hay
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool hInt = false;  //Variable para verificar si se está en un hito de una intersección
 
@@ -40,7 +40,7 @@ int primerGiro = -1;  //0 izquierda, 1 derecha
 
 int segundoGiro = -1;  //0 izquierda, 1 derecha
 
-int contador = 0; //Contador de hitos
+int contador = 0;  //Contador de hitos
 
 QTRSensors qtr;
 
@@ -62,8 +62,12 @@ void setup() {
 
   if (!lox.begin()) {
     Serial.println(F("¡Error de inicio de V53L0X! Verifica las conexiones."));
-    while (1)
-      ;  // Detiene el programa si no se puede inicializar el sensor
+    while (1) {
+      digitalWrite(LED, HIGH);
+      delay(1000);
+      digitalWrite(LED, LOW);
+      delay(1000);
+    }  // Detiene el programa si no se puede inicializar el sensor
   }
 
   Serial.println(F("VL53L0X iniciado correctamente"));
@@ -173,7 +177,7 @@ void loop() {
           giroIzq();
         }
         inCuadrado = true;
-      } else if (contador == final) {
+      } else if (contador == hFinal) {
         Motor(0, 0);
         while (true) {
           delay(200);
@@ -226,7 +230,7 @@ void loop() {
           giroIzq();
         }
         inCuadrado = true;
-      } else if (contador == final) {
+      } else if (contador == hFinal) {
         Motor(0, 0);
         while (true) {
           delay(200);
