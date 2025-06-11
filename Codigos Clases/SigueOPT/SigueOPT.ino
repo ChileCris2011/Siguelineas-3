@@ -243,7 +243,7 @@ void loop() {
       contador += 1;
     } else {
       giroDer();
-      if (primerGiro == 0 || segundoGiro == 0) {  // Si el cuadrado se tuvo que tomar por la derecha, entonces todos los giros
+      if (primerGiro == 1 || segundoGiro == 1) {  // Si el cuadrado se tuvo que tomar por la derecha, entonces todos los giros
         inCuadrado = false;                       // dentro del cuadrado serán por la izquierda. Por tanto, si se gira a la derecha,
       }                                           // se ha salido del cuadrado.
     }
