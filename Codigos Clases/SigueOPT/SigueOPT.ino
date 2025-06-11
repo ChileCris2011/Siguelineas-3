@@ -167,7 +167,7 @@ void loop() {
         }
         inCuadrado = true;
       } else if (contador == segundoCuadrado) {
-        if (primerGiro) {
+        if (segundoGiro) {
           giroDer();
         } else {
           giroIzq();
@@ -204,9 +204,7 @@ void loop() {
     if (!inCuadrado) {
       if (hInt) {
 
-        Motor(50, 50);
-        delay(500);
-        Motor(0, 0);
+        pass();
 
       } else if (contador == primeraMarca) {
         primerGiro = 1;
@@ -222,7 +220,7 @@ void loop() {
         }
         inCuadrado = true;
       } else if (contador == segundoCuadrado) {
-        if (primerGiro) {
+        if (segundoGiro) {
           giroDer();
         } else {
           giroIzq();

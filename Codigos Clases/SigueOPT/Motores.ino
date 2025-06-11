@@ -63,7 +63,7 @@ void giroIzq() {
   delay(100);
 }
 
-void pass() {
+void pass() {     //Avanza para evitar lecturas fantasmas
   Motor(50, 50);
   delay(500);
   Motor(0, 0);
