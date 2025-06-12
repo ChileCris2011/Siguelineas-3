@@ -42,6 +42,8 @@ int segundoGiro = -1;  //0 izquierda, 1 derecha
 
 int contador = 0;  //Contador de hitos
 
+int marcaActual = -1 //
+
 QTRSensors qtr;
 
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
@@ -51,6 +53,8 @@ uint16_t sensorValues[SensorCount];
 int ultimaPosicion = 0;
 
 void setup() {
+  Serial.begin(115200);
+
   inicializarMotores();
 
   qtr.setTypeAnalog();
@@ -84,9 +88,6 @@ void setup() {
     delay(10);
   }
 
-  Serial.begin(115200);
-
-
   while (digitalRead(BOTON) == 0) {
   }
   delay(500);
@@ -96,163 +97,13 @@ void loop() {
   // Leer sensores
   qtr.read(sensorValues);
 
-  if (contador == evasion) {
-    VL53L0X_RangingMeasurementData_t measure;  //Declara la variable para almacenar los datos de la medición
-
-    //Realiza la medición de distancia y almacena los resultados en la variable 'measure'
-    lox.rangingTest(&measure, false);
-
-    if (measure.RangeStatus != 4) {
-      if (measure.RangeMilliMeter < 100) {
-        Motor(-50, -50);
-        delay(500);
-        Motor(0, 0);
-        delay(200);
-        Motor(80, -80);
-        delay(700);
-        Motor(50, 50);
-        delay(1500);
-        Motor(0, 0);
-        delay(200);
-        Motor(-80, 80);
-        delay(700);
-        Motor(50, 50);
-        delay(3250);
-        Motor(0, 0);
-        delay(200);
-        Motor(-80, 80);
-        delay(700);
-        while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-          qtr.read(sensorValues);
-          Motor(50, 50);
-        }
-        Motor(0, 0);
-        delay(200);
-        Motor(50, 50);
-        delay(250);
-        qtr.read(sensorValues);
-        while (sensorValues[4] < umbral) {
-          qtr.read(sensorValues);
-          Motor(80, -80);
-        }
-        Motor(50, 50);
-        delay(200);
-        Motor(0, 0);
-      }
-    }
-  }
-
-  for (int i = 0; i < lIntersecciones; i++) {
-    if (contador == intersecciones[i]) {
-      hInt = true;
-      break;
-    } else {
-      hInt = false;
-    }
-  }
+  fEvasion(); //Se evade el obtáculo pasando la marca definida en `const int evasion`
 
   if (sensorValues[1] > umbral && sensorValues[2] > umbral && sensorValues[3] > umbral && sensorValues[0] > umbral && sensorValues[4] > umbral) {  //IZQUIERDA
-    if (!inCuadrado) {
-      if (hInt) {
-
-        pass();
-
-      } else if (contador == primeraMarca) {
-        primerGiro = 0;
-        pass();
-      } else if (contador == segundaMarca) {
-        segundoGiro = 0;
-        pass();
-      } else if (contador == primerCuadrado) {
-        if (primerGiro) {
-          giroDer();
-        } else {
-          giroIzq();
-        }
-        inCuadrado = true;
-      } else if (contador == segundoCuadrado) {
-        if (segundoGiro) {
-          giroDer();
-        } else {
-          giroIzq();
-        }
-        inCuadrado = true;
-      } else if (contador == hFinal) {
-        Motor(0, 0);
-        while (true) {
-          delay(200);
-          digitalWrite(LED, HIGH);
-          delay(200);
-          digitalWrite(LED, LOW);
-        }
-      } else {
-        giroIzq();
-      }
-      digitalWrite(LED, HIGH);
-      delay(100);
-      digitalWrite(LED, LOW);
-      contador += 1;
-    } else {
-      giroIzq();
-      if (primerGiro == 0 || segundoGiro == 0) {  // Si el cuadrado se tuvo que tomar por la izquierda, entonces todos los giros
-        inCuadrado = false;                       // dentro del cuadrado serán por la derecha. Por tanto, si se gira a la izquierda,
-      }                                           // se ha salido del cuadrado.
-    }
+    fMarcas(0);
+  } else if (sensorValues[7] > umbral && sensorValues[6] > umbral && sensorValues[5] > umbral && sensorValues[4] > umbral && sensorValues[3] > umbral) {  //derecha
+    fmarcas(1);
   }
-
-
-  ///////////////////////////////////////////////////////////
-
-
-  else if (sensorValues[7] > umbral && sensorValues[6] > umbral && sensorValues[5] > umbral && sensorValues[4] > umbral && sensorValues[3] > umbral) {  //derecha
-    if (!inCuadrado) {
-      if (hInt) {
-
-        pass();
-
-      } else if (contador == primeraMarca) {
-        primerGiro = 1;
-        pass();
-      } else if (contador == segundaMarca) {
-        segundoGiro = 1;
-        pass();
-      } else if (contador == primerCuadrado) {
-        if (primerGiro) {
-          giroDer();
-        } else {
-          giroIzq();
-        }
-        inCuadrado = true;
-      } else if (contador == segundoCuadrado) {
-        if (segundoGiro) {
-          giroDer();
-        } else {
-          giroIzq();
-        }
-        inCuadrado = true;
-      } else if (contador == hFinal) {
-        Motor(0, 0);
-        while (true) {
-          delay(200);
-          digitalWrite(LED, HIGH);
-          delay(200);
-          digitalWrite(LED, LOW);
-        }
-      } else {
-        giroDer();
-      }
-      digitalWrite(LED, HIGH);
-      delay(100);
-      digitalWrite(LED, LOW);
-      contador += 1;
-    } else {
-      giroDer();
-      if (primerGiro == 1 || segundoGiro == 1) {  // Si el cuadrado se tuvo que tomar por la derecha, entonces todos los giros
-        inCuadrado = false;                       // dentro del cuadrado serán por la izquierda. Por tanto, si se gira a la derecha,
-      }                                           // se ha salido del cuadrado.
-    }
-  }
-
 
   // Mostrar valores por Serial
   for (uint8_t i = 0; i < SensorCount; i++) {
