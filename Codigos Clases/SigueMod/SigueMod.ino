@@ -12,7 +12,7 @@
 const int frecuencia = 5000;
 const int resolution = 8;
 
-int umbral = 3600;
+int umbral = 3900;
 
 // Hitos
 //Los hitos se cuentan desde el hito 0. Los hitos son giros o intersecciones que el robot debe superar.
@@ -21,7 +21,7 @@ int umbral = 3600;
 const int intersecciones[] = { 0, 10, 14 };  // Intersecciones (Pasar de largo / Ignorar)
 const int lIntersecciones = 3;               // Longitud de intersecciones (para el for)
 
-const int evasion = -1;  //Hito de evasión (Hito antes a la evasión del obstáculo + 1). Dejar en -1 si no hay
+const int evasion = 8;  //Hito de evasión (Hito antes a la evasión del obstáculo + 1). Dejar en -1 si no hay
 
 const int hFinal = 30;  //Hito final (Hito de la meta)
 
@@ -35,6 +35,8 @@ const int segundoCuadrado = 25;  //Hito donde empieza el segundo cuadrado. Dejar
 
 bool hInt = false;  //Variable para verificar si se está en un hito de una intersección
 
+int contacuadro = 0;
+
 bool inCuadrado = false;  //Variable para verificar si se está en un cuadrado
 
 int primerGiro = -1;  //0 izquierda, 1 derecha
@@ -42,6 +44,8 @@ int primerGiro = -1;  //0 izquierda, 1 derecha
 int segundoGiro = -1;  //0 izquierda, 1 derecha
 
 int contador = 0;  //Contador de hitos
+
+bool inRamp = true;
 
 QTRSensors qtr;
 
@@ -132,7 +136,7 @@ void loop() {
         Motor(80, -80);
         delay(700);
         Motor(50, 50);
-        delay(1500);
+        delay(1600);
         Motor(0, 0);
         delay(200);
         Motor(-80, 80);
@@ -143,7 +147,8 @@ void loop() {
         delay(200);
         Motor(-80, 80);
         delay(700);
-        while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
+        qtr.read(sensorValues);
+        while (sensorValues[3] < umbral && sensorValues[4] < umbral) {
           qtr.read(sensorValues);
           Motor(50, 50);
         }
@@ -214,10 +219,23 @@ void loop() {
       digitalWrite(LED, LOW);
       contador += 1;
     } else {
-      giroIzq();
-      if (primerGiro == 0 || segundoGiro == 0) {  // Si el cuadrado se tuvo que tomar por la izquierda, entonces todos los giros
-        inCuadrado = false;                       // dentro del cuadrado serán por la derecha. Por tanto, si se gira a la izquierda,
-      }                                           // se ha salido del cuadrado.
+      contacuadro++;
+      Motor(50, 50);
+      delay(500);
+      Motor(0, 0);
+      qtr.read(sensorValues);
+      if (!(sensorValues[3] < umbral && sensorValues[4] < umbral)) {
+        inCuadrado = false;
+      }
+      if (primerGiro == 0 && contacuadro == 2) {
+        Motor(80, -80);  // giro izq
+        delay(700);
+        Motor(50, 50);
+        delay(100);
+      }
+      Motor(80, -80);  // giro izq
+      delay(700);
+      Motor(0, 0);
     }
   }
 
@@ -267,10 +285,32 @@ void loop() {
       digitalWrite(LED, LOW);
       contador += 1;
     } else {
-      giroDer();
-      if (primerGiro == 1 || segundoGiro == 1) {  // Si el cuadrado se tuvo que tomar por la derecha, entonces todos los giros
-        inCuadrado = false;                       // dentro del cuadrado serán por la izquierda. Por tanto, si se gira a la derecha,
-      }                                           // se ha salido del cuadrado.
+      contacuadro++;
+      bool needrigh = true;
+      Motor(50, 50);
+      delay(500);
+      Motor(0, 0);
+      qtr.read(sensorValues);
+      if (!(sensorValues[3] < umbral && sensorValues[4] < umbral)) {
+        inCuadrado = false;
+        if (primerGiro = 1) {
+          pass();
+          needrigh = false;
+        }
+        primerGiro = -1;
+      }
+      if (primerGiro == 0 && contacuadro == 2) {
+        Motor(80, -80);  // giro izq
+        delay(700);
+        Motor(50, 50);
+        delay(100);
+        needrigh = false;
+      }
+      if (needrigh) {
+        Motor(-80, 80);  // giro der
+        delay(700);
+        Motor(0, 0);
+      }
     }
   }
 
@@ -313,15 +353,15 @@ void loop() {
 
   ////////////////////////////////
   if (posicion >= -50 && posicion <= 50) {
-    Motor(75, 75);
+    Motor(50, 50);
   } else if (posicion < -50 && posicion > -150) {
-    Motor(0, 120);
+    Motor(0, 80);
   } else if (posicion > 50 && posicion < 150) {
-    Motor(120, 0);
+    Motor(80, 0);
   } else if (posicion > 150) {  //seguidor
-    Motor(175, 0);
+    Motor(150, 0);
   } else if (posicion < -150) {
-    Motor(0, 175);
+    Motor(0, 150);
   }
   ////////////////////////////////////
 

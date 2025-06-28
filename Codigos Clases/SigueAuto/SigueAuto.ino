@@ -12,6 +12,8 @@ const int umbral = 3500;
 int primerCuadrado = -1;
 int segundoCuadrado = -1;
 
+bool inCuadrado = false;
+
 QTRSensors qtr;
 
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();

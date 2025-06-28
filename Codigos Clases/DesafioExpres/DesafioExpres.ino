@@ -12,24 +12,24 @@
 const int frecuencia = 5000;
 const int resolution = 8;
 
-int umbral = 3600;
+int umbral = 4000;
 
 // Hitos
 //Los hitos se cuentan desde el hito 0. Los hitos son giros o intersecciones que el robot debe superar.
 //Para los hitos, no se cuentan los giros de los cuadrados para evitar inconsistencias. Solo se cuenta el hito de entrada,
 //no el se salida.
-const int intersecciones[] = { 0, 10, 14 };  // Intersecciones (Pasar de largo / Ignorar)
-const int lIntersecciones = 3;               // Longitud de intersecciones (para el for)
+const int intersecciones[] = { 0, 1, 2, 13, 14, 15 };  // Intersecciones (Pasar de largo / Ignorar)
+const int lIntersecciones = 3;                         // Longitud de intersecciones (para el for)
 
-const int evasion = -1;  //Hito de evasión (Hito antes a la evasión del obstáculo + 1). Dejar en -1 si no hay
+const int evasion = 8;  //Hito de evasión (Hito antes a la evasión del obstáculo + 1). Dejar en -1 si no hay
 
-const int hFinal = 30;  //Hito final (Hito de la meta)
+const int hFinal = 16;  //Hito final (Hito de la meta)
 
-const int primeraMarca = 1;  //Hito donde se avisa la dirección de un cuadrado. Dejar en -1 si debe ser ignorada
-const int segundaMarca = 2;  //Hito donde se avisa la dirección de un segundo cuadrado. Dejar en -1 si no hay o debe ser ignorada
+const int primeraMarca = -1;  //Hito donde se avisa la dirección de un cuadrado. Dejar en -1 si debe ser ignorada
+const int segundaMarca = -1;  //Hito donde se avisa la dirección de un segundo cuadrado. Dejar en -1 si no hay o debe ser ignorada
 
-const int primerCuadrado = 19;   //Hito donde empieza el primer cuadrado. Dejar en -1 si no hay
-const int segundoCuadrado = 25;  //Hito donde empieza el segundo cuadrado. Dejar en -1 si no hay
+const int primerCuadrado = -1;   //Hito donde empieza el primer cuadrado. Dejar en -1 si no hay
+const int segundoCuadrado = -1;  //Hito donde empieza el segundo cuadrado. Dejar en -1 si no hay
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -125,40 +125,20 @@ void loop() {
 
     if (measure.RangeStatus != 4) {
       if (measure.RangeMilliMeter < 100) {
+        Motor(0, 0);
         Motor(-50, -50);
+        delay(200);
+        Motor(50, -50);
         delay(500);
-        Motor(0, 0);
-        delay(200);
-        Motor(80, -80);
-        delay(700);
-        Motor(50, 50);
-        delay(1500);
-        Motor(0, 0);
-        delay(200);
-        Motor(-80, 80);
-        delay(700);
-        Motor(50, 50);
-        delay(3250);
-        Motor(0, 0);
-        delay(200);
-        Motor(-80, 80);
-        delay(700);
-        while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
+        Motor(50, -50);
+        while (true) {
           qtr.read(sensorValues);
-          Motor(50, 50);
+          if (sensorValues[3] > umbral || sensorValues[4] > umbral) {
+            Motor(0, 0);
+            delay(200);
+            break;
+          }
         }
-        Motor(0, 0);
-        delay(200);
-        Motor(50, 50);
-        delay(250);
-        qtr.read(sensorValues);
-        while (sensorValues[4] < umbral) {
-          qtr.read(sensorValues);
-          Motor(80, -80);
-        }
-        Motor(50, 50);
-        delay(200);
-        Motor(0, 0);
       }
     }
   }
@@ -313,15 +293,15 @@ void loop() {
 
   ////////////////////////////////
   if (posicion >= -50 && posicion <= 50) {
-    Motor(75, 75);
+    Motor(50, 50);
   } else if (posicion < -50 && posicion > -150) {
-    Motor(0, 120);
+    Motor(0, 75);
   } else if (posicion > 50 && posicion < 150) {
-    Motor(120, 0);
+    Motor(75, 0);
   } else if (posicion > 150) {  //seguidor
-    Motor(175, 0);
+    Motor(120, 0);
   } else if (posicion < -150) {
-    Motor(0, 175);
+    Motor(0, 120);
   }
   ////////////////////////////////////
 

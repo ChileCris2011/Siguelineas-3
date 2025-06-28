@@ -62,7 +62,7 @@ void interseccion() {
   delay(500);
   Motor(0, 0);
   qtr.read(sensorValues);
-  if (sensorVales[3] < umbral && sensorValues[4] < umbral) {
+  if (sensorValues[3] < umbral && sensorValues[4] < umbral) {
     if (primerCuadrado == -1 && segundoCuadrado == -1) {
       Motor(0, 0);
       while (true) {
@@ -83,21 +83,23 @@ void interseccion() {
 }
 
 void giros(int direccion) {
-  /*
-      for (int i = 0; i < 250; i++){
-        Motor(0, 50);
-        qtr.read(sensorValues);
-        if(sensorValues[7] > umbral) {
-          interseccion();
-          return;
-        }
-      }
-    */
+  for (int i = 0; i < 250; i++) {
+    if (direccion == Derecha) {
+      Motor(50, 0);
+    } else {
+      Motor(0, 50);
+    }
+    qtr.read(sensorValues);
+    if (sensorValues[7] > umbral) {
+      interseccion();
+      return;
+    }
+  }
   Motor(50, 50);
   delay(500);
   Motor(0, 0);
   qtr.read(sensorValues);
-  if (sensorVales[3] < umbral && sensorValues[4] < umbral) {
+  if (sensorValues[3] < umbral && sensorValues[4] < umbral) {
     girar(direccion);
   } else {
     if (!inCuadrado) {
