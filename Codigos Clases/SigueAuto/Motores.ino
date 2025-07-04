@@ -1,4 +1,4 @@
-#include "Pines.h"
+// Función inicialización de puente h
 
 void inicializarMotores() {
   pinMode(BIN2, OUTPUT);
@@ -11,6 +11,7 @@ void inicializarMotores() {
   ledcAttachPin(PWMA, 0);
 }
 
+// Función accionamiento motor izquierdo
 void Motoriz(int value) {
   if (value >= 0) {
     digitalWrite(BIN1, LOW);
@@ -22,6 +23,7 @@ void Motoriz(int value) {
   }
   ledcWrite(0, value);
 }
+
 // Función accionamiento motor derecho
 void Motorde(int value) {
   if (value >= 0) {
@@ -41,30 +43,17 @@ void Motor(int righ, int left) {
   Motorde(righ);
 }
 
-void giroDer() {
-  Motor(0, 0);
-  delay(200);
-  Motor(50, 50);
-  delay(500);
-  Motor(-80, 80);  // giro der
-  delay(700);
-  Motor(50, 50);
-  delay(100);
-}
-
-void giroIzq() {
-  Motor(0, 0);
-  delay(200);
-  Motor(50, 50);
-  delay(500);
-  Motor(80, -80);  // giro izq
-  delay(700);
-  Motor(50, 50);
-  delay(100);
-}
-
-void pass() {     //Avanza para evitar lecturas fantasmas
-  Motor(50, 50);
-  delay(500);
-  Motor(0, 0);
+// Función para girar el robot
+void girar(int direccion) {
+  if (direccion == 1) {
+    Motor(0, 0);
+    delay(200);
+    Motor(-80, 80);  // giro der
+    delay(700);
+  } else {
+    Motor(0, 0);
+    delay(200);
+    Motor(80, -80);  // giro izq
+    delay(700);
+  }
 }

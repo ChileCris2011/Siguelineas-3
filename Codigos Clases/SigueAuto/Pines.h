@@ -1,5 +1,3 @@
-#define USE_BLUETOOTH
-
 #define AIN1 18
 #define AIN2 5
 #define PWMA 19
@@ -14,6 +12,3 @@
 
 //ROJO ADELANTE
 //AZUL ATRAS
-
-#define Derecha 1
-#define Izquierda 0
