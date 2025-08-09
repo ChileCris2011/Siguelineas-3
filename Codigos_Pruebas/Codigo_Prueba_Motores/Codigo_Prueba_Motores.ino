@@ -5,9 +5,18 @@ const int resolution = 8;
 
 void setup() {
   inicializarMotores();
+
   while (digitalRead(BOTON) == 0) {
   }
 }
 void loop() {
+  Motor(100, 100);
+  delay(500);
   Motor(-100, -100);
+  delay(500);
+  Motor(100, -100);
+  delay(500);
+  Motor(-100, 100);
+  delay(500);
+  Motor(0, 0);
 }
