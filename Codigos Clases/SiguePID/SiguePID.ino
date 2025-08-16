@@ -10,7 +10,7 @@
 #include <BluetoothSerial.h>
 
 #include <QTRSensors.h>
-#include <Adafruit_VL53L0X>
+#include <Adafruit_VL53L0X.h>
 #include <Wire.h>
 #include <MPU6050_light.h>
 
@@ -55,6 +55,9 @@ BluetoothSerial SerialBT;
 
 // Declara el sensor QTR
 QTRSensors qtr;
+
+// Declara el sensor láser (L0X)
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // Declara el giroscopio
 MPU6050 mpu(Wire);
@@ -153,7 +156,7 @@ void loop() {
     lox.rangingTest(&measure, false);
 
     if (measure.RangeStatus != 4) {
-      lecturaMM = measure.RangeMilliMeter;
+      int lecturaMM = measure.RangeMilliMeter;
       if (lecturaMM < 50) {  // Detecta un objeto (~5cm)
         Motor(-50, -50);                   // Retrocede para no golpear el objeto al girar
         delay(700);
@@ -170,7 +173,7 @@ void loop() {
         Motor(0, 0);
         delay(200);
         girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-        while (sensorValues[3] < umbral[3] || sensorValues[4] < umbral[4]) {
+        while (sensorValues[3] != 0 || sensorValues[4] != 0) {
           qtr.read(sensorValues);  // Avanza hasta detectar la línea
           Motor(50, 50);
         }
@@ -179,7 +182,7 @@ void loop() {
         Motor(50, 50);  // Avanza un poco para girar bien
         delay(250);
         qtr.read(sensorValues);
-        while (sensorValues[4] < umbral[4]) {
+        while (sensorValues[4] != 0) {
           qtr.read(sensorValues);
           girar(evadirHacia);  // Gira hasta acomodarse en la línea
         }
