@@ -1,0 +1,47 @@
+void girarDerecha(float grados) {
+  mpu.update();
+  float anguloInicio = mpu.getAngleZ();
+  float anguloActual = anguloInicio;
+  Motor(50, 50);
+  delay(5);
+  while ((anguloActual - anguloInicio) > -grados) {
+    Motor(baseGiros, -baseGiros);  // izquierda
+    mpu.update();
+    anguloActual = mpu.getAngleZ();
+  }
+  Motor(50, 50);
+  delay(200);
+  Motor(0, 0);
+}
+
+void girarIzquierda(float grados) {
+  mpu.update();
+  float anguloInicio = mpu.getAngleZ();
+  float anguloActual = anguloInicio;
+  Motor(50, 50);
+  delay(5);
+  while ((anguloActual - anguloInicio) < grados) {
+    Motor(-baseGiros, baseGiros);  // derecha
+    mpu.update();
+    anguloActual = mpu.getAngleZ();
+  }
+  Motor(50, 50);
+  delay(200);
+  Motor(0, 0);
+}
+
+void girar(int direccion) {
+  if (direccion == 1) {
+    girarDerecha(88);
+  } else {
+    girarIzquierda(88);
+  }
+}
+
+void girarCrudo(int direccion) {
+  if (direccion == 1) {
+    Motor(baseGiros, -baseGiros);  // giro der
+  } else {
+    Motor(-baseGiros, baseGiros);  // giro izq
+  }
+}

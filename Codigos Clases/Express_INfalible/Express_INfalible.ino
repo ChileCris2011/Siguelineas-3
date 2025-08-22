@@ -1,17 +1,4 @@
-// Pines motores
-#include "Pines.h"
-
-#define AIN1 16
-#define AIN2 17
-#define PWMA 4
-#define BIN1 5
-#define BIN2 18
-#define PWMB 19
-
-// Botón
-#define BOTON 12
-
-#define LED 2
+#include "pines.h"
 
 #include <QTRSensors.h>
 #include <Adafruit_VL53L0X.h>
@@ -50,7 +37,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.15, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBase = 70;
+const int velocidadBase = 80;
 const int baseGiros = 50;
 
 // ----------------- Estados
@@ -100,48 +87,7 @@ void setup() {
 
 void loop() {
   if (puedeLaser && !blockLaser) {
-
-    VL53L0X_RangingMeasurementData_t measure;  // Declara la variable para almacenar los datos de la medición
-
-    // Realiza la medición de distancia y almacena los resultados en la variable 'measure'
-    lox.rangingTest(&measure, false);
-
-    if (measure.RangeStatus != 4) {
-      int lecturaMM = measure.RangeMilliMeter;
-      if (lecturaMM < 100) {  // Detecta un objeto (~10cm)
-        Motor(-50, -50);                   // Retrocede para no golpear el objeto al girar
-        delay(700);
-        Motor(0, 0);
-        delay(200);
-        girar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
-        Motor(50, 50);
-        delay(1500);  // Avanza
-        Motor(0, 0);
-        delay(200);
-        girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
-        Motor(50, 50);
-        delay(3750);  // Avanza
-        Motor(0, 0);
-        delay(200);
-        girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-        qtr.read(sensorValues);
-        while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-          qtr.read(sensorValues);  // Avanza hasta detectar la línea
-          Motor(50, 50);
-        }
-        Motor(0, 0);
-        delay(200);
-        Motor(50, 50);  // Avanza un poco para girar bien
-        delay(250);
-        qtr.read(sensorValues);
-        while (sensorValues[4] < umbral) {
-          qtr.read(sensorValues);
-          girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
-        }
-        puedeLaser = false;
-        blockLaser = true;
-      }
-    }
+    verLaser();
   }
   qtr.read(sensorValues);
 
@@ -234,34 +180,20 @@ void evaluarCruce() {
 
   // (6) Tomar decisión
 
+
+
   // --- SEMI-INTERSECCIÓN (solo un lado) ---
-  if (vioIzq ^ vioDer) {
-    puedeLaser = false;
-    if (hayLineaFinal) {
+  if (vioIzq ^ vioDer) { // SOLO izquierda o derecha
+    puedeLaser = false; // Desactiva la lectura láser
+    if (hayLineaFinal) { // Si hay una línea delante
       // Si hay orden pendiente: FORZAR giro en esta semi (según la semi actual)
       if (forzarProximaSemi) {
-        if (vioIzq)  {
-          girarIzquierda(80);
-        }
-        else         {
-          girarDerecha(80);
-        }
-        forzarProximaSemi = false;  // consumir la orden
-        puedeLaser = true;
+        forzarNextSemi(vioIzq, vioDer);
         return;
       }
 
       // Si NO hay forzado: guardar marca (máx. 2)
-      if (totalMarcasGuardadas < 2) {
-        if (vioIzq)  {
-          marcaCuadradoDir[totalMarcasGuardadas] = -1;
-        }
-        if (vioDer)  {
-          marcaCuadradoDir[totalMarcasGuardadas] = +1;
-        }
-        totalMarcasGuardadas++;
-        tieneMarcaCuadrado = true;
-      }
+      guardarMarca(vioIzq, vioDer);
 
       Motor(40, 40);
       delay(140);
@@ -269,14 +201,8 @@ void evaluarCruce() {
       return; // volver al PID
     } else {
       // SEMI sin línea → giro normal inmediato
-      if (vioIzq)  {
-        girarIzquierda(80);
-        return;
-      }
-      if (vioDer)  {
-        girarDerecha(80);
-        return;
-      }
+      girosNoventa(vioIzq, vioDer); // No confundir con giros. Aqui se comprueba donde girar
+      return;
     }
   }
 
@@ -285,35 +211,11 @@ void evaluarCruce() {
     if (!hayLineaFinal) {
       // COMPLETA y SIN línea: usar próxima marca si existe
       if (totalMarcasGuardadas > 0) {
-        int dir = marcaCuadradoDir[0];
-
-        // Desplazar las marcas para que la segunda pase a ser primera
-        for (int i = 0; i < totalMarcasGuardadas - 1; i++) {
-          marcaCuadradoDir[i] = marcaCuadradoDir[i + 1];
-        }
-        totalMarcasGuardadas--;
-
-        // Ejecutar el giro
-        Motor(40, 40);
-        delay(666);
-        if (dir < 0) girarIzquierda(80);
-        else          girarDerecha(80);
-
-        // Preparar forzado en la próxima semi si aún queda otra marca
-        forzarProximaSemi = true;
-        puedeLaser = false;
+        entrarCuadrado();
         return;
       } else {
-        // *** NUEVO: Final sin marcas → detener 5 segundos y terminar ***
-        Motor(0, 0);
-        delay(1000);
-        for (int i = 0; i < 3; i++) {
-          digitalWrite(LED, HIGH);
-          delay(1000);
-          digitalWrite(LED, LOW);
-          delay(1000);
-        }
-        while (true) {} // fin
+        // Final sin marcas → detener 5 segundos y terminar
+        finalizar();
       }
     } else {
       // COMPLETA con línea → comportamiento normal: recto un poco

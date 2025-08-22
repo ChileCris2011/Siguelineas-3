@@ -115,7 +115,7 @@ void loop() {
         delay(200);
         girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
         Motor(50, 50);
-        delay(4000);  // Avanza
+        delay(3800);  // Avanza
         Motor(0, 0);
         delay(200);
         girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
@@ -205,7 +205,7 @@ void evaluarCruce() {
       }
     }
     if (vioIzq && vioDer) {
-      Motor(40, 40);   // avance suave de confirmación
+      Motor(40, 40);
       delay(200);
       break;
     }
