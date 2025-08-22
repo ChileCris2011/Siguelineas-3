@@ -1,10 +1,9 @@
-#define AIN1 16  // 18
-#define AIN2 17  // 5
-#define PWMA 4   // 19
-
-#define BIN1 5   // 17
-#define BIN2 18  // 16
-#define PWMB 19  // 4
+#define AIN1 5
+#define AIN2 18
+#define PWMA 4
+#define BIN1 17
+#define BIN2 16
+#define PWMB 19
 
 #define BOTON 12  // 12
 

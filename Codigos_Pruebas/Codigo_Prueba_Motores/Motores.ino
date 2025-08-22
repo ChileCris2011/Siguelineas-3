@@ -41,6 +41,6 @@ void Motorde(int valueder) {
 
 //Accionamiento de motores
 void Motor(int left, int righ) {
-  Motoriz(righ);
-  Motorde(left);
+  Motoriz(left);
+  Motorde(righ);
 }
