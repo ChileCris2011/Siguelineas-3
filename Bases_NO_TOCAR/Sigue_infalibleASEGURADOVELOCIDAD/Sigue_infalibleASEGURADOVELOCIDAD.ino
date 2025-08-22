@@ -50,7 +50,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.15, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBase = 80;
+const int velocidadBase = 50;
 const int baseGiros = 50;
 
 // ----------------- Estados

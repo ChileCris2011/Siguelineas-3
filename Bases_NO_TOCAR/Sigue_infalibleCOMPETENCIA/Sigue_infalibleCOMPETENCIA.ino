@@ -50,8 +50,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.15, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBase = 80;
-const int baseGiros = 50;
+const int velocidadBase = 50;
 
 // ----------------- Estados
 bool escaneando = false;
@@ -91,10 +90,6 @@ void setup() {
   pinMode(BOTON, INPUT);
 
   calibracionSensores();
-  digitalWrite(LED, HIGH);
-  delay(200);
-  digitalWrite(LED, LOW);
-  delay(200);
   calibracionGiroscopio();
 }
 
@@ -108,19 +103,19 @@ void loop() {
 
     if (measure.RangeStatus != 4) {
       int lecturaMM = measure.RangeMilliMeter;
-      if (lecturaMM < 100) {  // Detecta un objeto (~10cm)
+      if (lecturaMM < 50) {  // Detecta un objeto (~5cm)
         Motor(-50, -50);                   // Retrocede para no golpear el objeto al girar
         delay(700);
         Motor(0, 0);
         delay(200);
         girar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
         Motor(50, 50);
-        delay(1500);  // Avanza
+        delay(1800);  // Avanza
         Motor(0, 0);
         delay(200);
         girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
         Motor(50, 50);
-        delay(4000);  // Avanza
+        delay(3250);  // Avanza
         Motor(0, 0);
         delay(200);
         girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)

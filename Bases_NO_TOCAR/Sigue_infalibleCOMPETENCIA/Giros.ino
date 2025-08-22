@@ -5,7 +5,7 @@ void girarDerecha(float grados) {
   Motor(50, 50);
   delay(5);
   while ((anguloActual - anguloInicio) > -grados) {
-    Motor(baseGiros, -baseGiros);  // izquierda
+    Motor(50, -50);  // izquierda
     mpu.update();
     anguloActual = mpu.getAngleZ();
   }
@@ -21,7 +21,7 @@ void girarIzquierda(float grados) {
   Motor(50, 50);
   delay(5);
   while ((anguloActual - anguloInicio) < grados) {
-    Motor(-baseGiros, baseGiros);  // derecha
+    Motor(-50, 50);  // derecha
     mpu.update();
     anguloActual = mpu.getAngleZ();
   }
@@ -40,8 +40,8 @@ void girar(int direccion) {
 
 void girarCrudo(int direccion) {
   if (direccion == 1) {
-    Motor(baseGiros, -baseGiros);  // giro der
+    Motor(80, -80);  // giro der
   } else {
-    Motor(-baseGiros, baseGiros);  // giro izq
+    Motor(-80, 80);  // giro izq
   }
 }
