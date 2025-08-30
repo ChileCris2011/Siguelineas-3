@@ -1,18 +1,18 @@
 #include "Pines.h"
 
-void inicializarMotores(){
-  pinMode(BIN2  , OUTPUT);
-  pinMode(BIN1  , OUTPUT);
+void inicializarMotores() {
+  pinMode(BIN2, OUTPUT);
+  pinMode(BIN1, OUTPUT);
   ledcSetup(0, freq, resolution);
   ledcAttachPin(PWMB, 0);
-  pinMode(AIN1  , OUTPUT);
-  pinMode(AIN2  , OUTPUT);
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
   ledcSetup(1, freq, resolution);
   ledcAttachPin(PWMA, 1);
 }
 
 void Motoriz(int value) {
-  if ( value >= 0 ) {
+  if (value >= 0) {
     digitalWrite(BIN1, HIGH);
     digitalWrite(BIN2, LOW);
   } else {
@@ -20,17 +20,26 @@ void Motoriz(int value) {
     digitalWrite(BIN2, HIGH);
     value *= -1;
   }
+  if (value > 255) {
+    value = 255;
+  }
   ledcWrite(0, value);
 }
 // Función accionamiento motor derecho
 void Motorde(int value) {
-  if ( value >= 0 ) {
+  if (value >= 0) {
     digitalWrite(AIN1, HIGH);
     digitalWrite(AIN2, LOW);
   } else {
     digitalWrite(AIN1, LOW);
     digitalWrite(AIN2, HIGH);
     value *= -1;
+  }
+  value += 6;
+  if (value > 255) {
+    value = 255;
+  } else if (value < 10){
+    value = 0;
   }
   ledcWrite(1, value);
 }
