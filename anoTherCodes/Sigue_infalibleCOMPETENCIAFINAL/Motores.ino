@@ -1,5 +1,3 @@
-#include "Pines.h"
-
 void inicializarMotores(){
   pinMode(BIN2  , OUTPUT);
   pinMode(BIN1  , OUTPUT);

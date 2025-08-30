@@ -1,18 +1,6 @@
 // Pines motores
 #include "Pines.h"
 
-#define AIN1 16
-#define AIN2 17
-#define PWMA 4
-#define BIN1 5
-#define BIN2 18
-#define PWMB 19
-
-// Botón
-#define BOTON 12
-
-#define LED 2
-
 #include <QTRSensors.h>
 #include <Adafruit_VL53L0X.h>
 #include <Wire.h>
@@ -23,11 +11,9 @@ bool primerCuadradoIzquierda  = false;
 bool primerCuadradoDerecha    = false;
 bool segundoCuadradoIzquierda = false;
 bool segundoCuadradoDerecha   = false;
-int  contadorCasosEspeciales  = 0;
 bool huboLineaCentral         = false; // flag general
 
 int  marcaCuadradoDir[2] = {0, 0};  // hasta 2 marcas: -1 izq, +1 der
-int  totalMarcasGuardadas = 0;
 bool tieneMarcaCuadrado = false;
 bool forzarProximaSemi  = false;
 

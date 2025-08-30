@@ -178,7 +178,7 @@ void loop() {
   if (contadorCruce > 3) {
     evaluarCruce();
     contadorCruce = 0;
-    return;
+    loop();
   }
 
   // Seguimiento de línea normal
@@ -247,6 +247,7 @@ void evaluarCruce() {
           girarDerecha(80);
         }
         forzarProximaSemi = false;  // consumir la orden
+        // Marcar posicion giroscopio **
         puedeLaser = true;
         return;
       }
