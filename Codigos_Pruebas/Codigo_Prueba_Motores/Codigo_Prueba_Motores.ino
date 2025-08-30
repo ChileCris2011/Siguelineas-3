@@ -10,6 +10,14 @@ void setup() {
   }
 }
 void loop() {
+  Motor(100, 100);
+  delay(750);
+  Motor(-100, -100);
+  delay(750);
   Motor(-100, 100);
-  delay(500);
+  delay(750);
+  Motor(100, -100);
+  delay(750);
+  Motor(0, 0);
+  setup();
 }

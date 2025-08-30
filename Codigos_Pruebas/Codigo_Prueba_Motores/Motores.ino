@@ -15,11 +15,11 @@ void inicializarMotores() {
 // Función para el motor izquierdo
 void Motoriz(int valueiz) {
   if (valueiz >= 0) {
-    digitalWrite(BIN1, LOW);
-    digitalWrite(BIN2, HIGH);
-  } else {
     digitalWrite(BIN1, HIGH);
     digitalWrite(BIN2, LOW);
+  } else {
+    digitalWrite(BIN1, LOW);
+    digitalWrite(BIN2, HIGH);
     valueiz = -valueiz;
   }
   ledcWrite(1, valueiz); // ← CAMBIADO de 0 a 1
@@ -28,11 +28,11 @@ void Motoriz(int valueiz) {
 // Función para el motor derecho
 void Motorde(int valueder) {
   if (valueder >= 0) {
-    digitalWrite(AIN1, LOW);
-    digitalWrite(AIN2, HIGH);
-  } else {
     digitalWrite(AIN1, HIGH);
     digitalWrite(AIN2, LOW);
+  } else {
+    digitalWrite(AIN1, LOW);
+    digitalWrite(AIN2, HIGH);
     valueder = -valueder;
   }
   ledcWrite(0, valueder); // ← CAMBIADO de 1 a 0
