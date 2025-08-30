@@ -1,18 +1,6 @@
 // Pines motores
 #include "Pines.h"
 
-#define AIN1 16
-#define AIN2 17
-#define PWMA 4
-#define BIN1 5
-#define BIN2 18
-#define PWMB 19
-
-// Botón
-#define BOTON 12
-
-#define LED 2
-
 #include <QTRSensors.h>
 #include <Adafruit_VL53L0X.h>
 #include <Wire.h>
@@ -189,12 +177,14 @@ void evaluarCruce() {
   // Umbrales
   const int TH_LADO   = 4000; // extremos (0 y 7)
   const int TH_CENTRO = 3200; // centrales (2..5) para "hay línea al frente"
-
+  
+  /*
   // (2) Retroceder
   Motor(-40, -40);
   delay(300);
   Motor(0, 0);
   delay(100);
+  */
 
   // (3) Avanzar ESCANEANDO para clasificar
   bool vioIzq = false, vioDer = false, vioCentroDuranteScan = false;
@@ -327,5 +317,10 @@ void evaluarCruce() {
 
   // --- Nada concluyente ---
   Motor(0, 0);
-  while (true) {}
+  while (true) {
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    delay(500);
+  }
 }
