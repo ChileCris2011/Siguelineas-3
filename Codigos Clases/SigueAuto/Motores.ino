@@ -21,7 +21,7 @@ void Motoriz(int value) {
     digitalWrite(BIN2, LOW);
     value *= -1;
   }
-  ledcWrite(0, value);
+  ledcWrite(1, value);
 }
 
 // Función accionamiento motor derecho
@@ -34,11 +34,11 @@ void Motorde(int value) {
     digitalWrite(AIN2, HIGH);
     value *= -1;
   }
-  ledcWrite(1, value);
+  ledcWrite(0, value);
 }
 
 // Accionamiento de motores
-void Motor(int righ, int left) {
+void Motor(int left, int righ) {
   Motoriz(left);
   Motorde(righ);
 }

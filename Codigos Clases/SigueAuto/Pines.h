@@ -1,14 +1,13 @@
-#define AIN1 18
-#define AIN2 5
-#define PWMA 19
+#define AIN1 16  // 18
+#define AIN2 17  // 5
+#define PWMA 4   // 19
 
-#define BIN1 17
-#define BIN2 16
-#define PWMB 4
+#define BIN1 5   // 17
+#define BIN2 18  // 16
+#define PWMB 19  // 4
 
-#define BOTON 12
+#define BOTON 12  // 12
 
 #define LED 2
 
-//ROJO ADELANTE
-//AZUL ATRAS
+//VERDE ADELANTE

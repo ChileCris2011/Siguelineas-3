@@ -62,7 +62,7 @@ void setup() {
       digitalWrite(LED, HIGH);
       delay(1000);
       digitalWrite(LED, LOW);  // Detiene el programa si no se puede inicializar el sensor
-      delay(1000);
+      delay(500);
     }
   }
 
@@ -73,7 +73,7 @@ void setup() {
   delay(500);
 
   // Empieza a girar sobre su eje
-  Motor(-100, 100);
+  //Motor(-100, 100);
 
   // Calibración de los sensores QTR para seguir la línea
   for (int i = 0; i < 100; i++) {
@@ -92,6 +92,7 @@ void setup() {
     umbral[i] = (qtr.calibrationOn.minimum[i] + qtr.calibrationOn.maximum[i]) / 2;
   }
 
+  while (digitalRead(BOTON) == 0) {}
   delay(500);
   // Recordar poner el robot mirando hacia atrás, ya que en la caliración quedará mirando para el otro lado y empezará automáticamente
 }
@@ -116,14 +117,14 @@ void loop() {
       delay(1800);  // Avanza
       Motor(0, 0);
       delay(200);
-      girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
+      girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ésto. Solo funciona)
       Motor(50, 50);
       delay(3250);  // Avanza
       Motor(0, 0);
       delay(200);
       girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-      while (sensorValues[3] < umbral[3] || sensorValues[4] < umbral[4]) {
-        qtr.read(sensorValues);  // Avanza hasta detectar la línea
+      while (sensorValues[3] < umbral[3] || sensorValues[4] < umbral[4]) {  // Avanza hasta detectar la línea
+        qtr.read(sensorValues);
         Motor(50, 50);
       }
       Motor(0, 0);
