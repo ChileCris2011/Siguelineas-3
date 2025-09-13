@@ -87,6 +87,7 @@ void setup() {
 }
 
 void loop() {
+  /*
   if (puedeLaser && !blockLaser) {
 
     VL53L0X_RangingMeasurementData_t measure;  // Declara la variable para almacenar los datos de la medición
@@ -131,6 +132,8 @@ void loop() {
       }
     }
   }
+  */
+
   qtr.read(sensorValues);
 
   // Filtrado simple para el cálculo de posición
@@ -158,6 +161,8 @@ void loop() {
     return;
   }
 
+  /*
+
   // Disparador de cruce por extremos
   static int contadorCruce = 0;
   if (sensorValues[0] > 4000 || sensorValues[7] > 4000) contadorCruce++;
@@ -166,8 +171,8 @@ void loop() {
   if (contadorCruce > 3) {
     evaluarCruce();
     contadorCruce = 0;
-    loop();
   }
+  */
 
   // Seguimiento de línea normal
   PID(position);
@@ -198,6 +203,8 @@ void evaluarCruce() {
       }
     }
     if (vioIzq && vioDer) {
+      Motor(40, 40);   // avance suave de confirmación
+      delay(200);
       break;
     }
     Motor(40, 40);   // avance suave de confirmación
@@ -315,3 +322,4 @@ void evaluarCruce() {
   Motor(0, 0);
   while (true) {}
 }
+

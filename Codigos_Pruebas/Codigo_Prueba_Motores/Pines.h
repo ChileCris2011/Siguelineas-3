@@ -45,5 +45,5 @@ Robot 3:
   HIGH
   /////////
 
-  Cable Verde Atrás
+  Cable Verde Adelante
 ************************************/
