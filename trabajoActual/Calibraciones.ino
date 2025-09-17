@@ -23,6 +23,7 @@ void calibracionSensores() {
       delay(500);
     }
   }
+  lox.startRangeContinuous(); // Empieza la lectura contínua del láser
 }
 void calibracionGiroscopio() {
   // Configuración MPU

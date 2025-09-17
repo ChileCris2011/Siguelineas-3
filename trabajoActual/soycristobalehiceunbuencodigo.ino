@@ -6,6 +6,18 @@
 #include <Wire.h>
 #include <MPU6050_light.h>
 
+
+/*
+// Ésto está aquí para poder revisar el código sin necesidad de tener la placa esp32 instalada
+// Define funciones LedC que solo la version 2.x del esp32 contiene
+// Recuerda comentar ésto si lo vas a subir, o descomentarlo si no vas a usar la esp32
+
+void ledcWrite(uint8_t pin, uint32_t duty) {}
+void ledcSetup(uint8_t chan, uint32_t freq, uint8_t bit_num) {}
+void ledcAttachPin(uint8_t pin, uint8_t chan) {}
+
+*/
+
 //variables por entender
 bool primerCuadradoIzquierda = false;
 bool primerCuadradoDerecha = false;
@@ -88,53 +100,44 @@ void setup() {
 }
 
 void loop() {
-  /*
-  if (puedeLaser && !blockLaser) {
-
-    VL53L0X_RangingMeasurementData_t measure;  // Declara la variable para almacenar los datos de la medición
-
-    // Realiza la medición de distancia y almacena los resultados en la variable 'measure'
-    lox.rangingTest(&measure, false);
-
-    if (measure.RangeStatus != 4) {
-      int lecturaMM = measure.RangeMilliMeter;
-      if (lecturaMM < 100) {  // Detecta un objeto (~10cm)
-        Motor(-50, -50);      // Retrocede para no golpear el objeto al girar
-        delay(700);
-        Motor(0, 0);
-        delay(200);
-        plusgirar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
+  if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
+    int lecturaMM = lox.readRange();
+    if (lecturaMM < 100) {  // Detecta un objeto (~10cm)
+      Motor(-50, -50);      // Retrocede para no golpear el objeto al girar
+      delay(700);
+      Motor(0, 0);
+      delay(200);
+      plusgirar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
+      Motor(50, 50);
+      delay(1500);  // Avanza
+      Motor(0, 0);
+      delay(200);
+      girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
+      Motor(50, 50);
+      delay(3750);  // Avanza
+      Motor(0, 0);
+      delay(200);
+      girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
+      qtr.read(sensorValues);
+      while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
+        qtr.read(sensorValues);  // Avanza hasta detectar la línea
         Motor(50, 50);
-        delay(1500);  // Avanza
-        Motor(0, 0);
-        delay(200);
-        girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
-        Motor(50, 50);
-        delay(3750);  // Avanza
-        Motor(0, 0);
-        delay(200);
-        girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-        qtr.read(sensorValues);
-        while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-          qtr.read(sensorValues);  // Avanza hasta detectar la línea
-          Motor(50, 50);
-        }
-        Motor(0, 0);
-        delay(200);
-        Motor(50, 50);  // Avanza un poco para girar bien
-        delay(250);
-        qtr.read(sensorValues);
-        while (sensorValues[4] < umbral) {
-          qtr.read(sensorValues);
-          girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
-        }
-        puedeLaser = false;
-        blockLaser = true;
       }
+      Motor(0, 0);
+      delay(200);
+      Motor(50, 50);  // Avanza un poco para girar bien
+      delay(250);
+      qtr.read(sensorValues);
+      while (sensorValues[4] < umbral) {
+        qtr.read(sensorValues);
+        girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
+      }
+      puedeLaser = false;
+      blockLaser = true;  // Bloquea el laser para que no siga leyendo
     }
   }
-  */
-  qtr.read(sensorValues);
+
+  qtr.read(sensorValues);  // Lectura de los sensores de línea
 
   // Filtrado simple para el cálculo de posición
   for (uint8_t i = 0; i < SensorCount; i++) {
@@ -171,6 +174,11 @@ void loop() {
 void evaluarCruce() {
 
   static int contadorCruce = 0;
+
+  /*
+  Ahora se llama directamente a la función evaluarCruce() y se hace la verificación
+  dentro para evitar que el PID actúe en los giros, enchuecando el robot
+  */
 
   while (contadorCruce < 3) {
     qtr.read(sensorValues);
@@ -215,8 +223,9 @@ void evaluarCruce() {
 
   while (true) {
     qtr.read(sensorValues);
-    if (sensorValues[0] < TH_LADO) nvioIzq = false;
-    if (sensorValues[7] < TH_LADO) nvioDer = false;
+
+    if (sensorValues[0] < TH_LADO) nvioIzq = false;  // Avanza hasta que ambos sensores sean blancos
+    if (sensorValues[7] < TH_LADO) nvioDer = false;  // Para evitar releer el cruce
 
     if (!nvioIzq && !nvioDer) break;
   }
@@ -237,32 +246,30 @@ void evaluarCruce() {
   // (6) Tomar decisión
 
   // --- SEMI-INTERSECCIÓN (solo un lado) ---
-  if (vioIzq ^ vioDer) {
+  if (vioIzq ^ vioDer) {  // Si SOLO vio UN lado
     puedeLaser = false;
-    if (hayLineaFinal) {
-      // Si hay orden pendiente: FORZAR giro en esta semi (según la semi actual)
-      if (forzarProximaSemi) {
+    if (hayLineaFinal) {        // Si hay línea delante
+      if (forzarProximaSemi) {  // Si tiene que forzar la salida
         if (vioIzq) {
-          girarIzquierda(80);
+          girarIzquierda(80);  // Fuerza el giro hacia el lado detectado
         } else {
           girarDerecha(80);
         }
         forzarProximaSemi = false;  // consumir la orden
-        // Marcar posicion giroscopio **
-        puedeLaser = true;
+        // Marcar posicion giroscopio ** <- ???
+        puedeLaser = true;  // Activa la detección (Cambiar segun la ubicacion del obstaculo)
         return;
       }
 
-      // Si NO hay forzado: guardar marca (máx. 2)
-      if (totalMarcasGuardadas < 2) {
+      // Si NO hay forzado: guardar marca
+      if (totalMarcasGuardadas < 2) {  // Si hay menos de 2 marcas guardadas
         if (vioIzq) {
           marcaCuadradoDir[totalMarcasGuardadas] = -1;
-        }
+        }  // Guarda la marca en el lado que vió
         if (vioDer) {
           marcaCuadradoDir[totalMarcasGuardadas] = +1;
         }
         totalMarcasGuardadas++;
-        tieneMarcaCuadrado = true;
       }
 
       Motor(40, 40);
@@ -284,9 +291,8 @@ void evaluarCruce() {
 
   // --- INTERSECCIÓN COMPLETA (ambos lados) ---
   if (vioIzq && vioDer) {
-    if (!hayLineaFinal) {
-      // COMPLETA y SIN línea: usar próxima marca si existe
-      if (totalMarcasGuardadas > 0) {
+    if (!hayLineaFinal) {              // Si no hay linea delante
+      if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
         int dir = marcaCuadradoDir[0];
 
         // Desplazar las marcas para que la segunda pase a ser primera
@@ -301,24 +307,23 @@ void evaluarCruce() {
         if (dir < 0) girarIzquierda(80);
         else girarDerecha(80);
 
-        // Preparar forzado en la próxima semi si aún queda otra marca
-        forzarProximaSemi = true;
+        forzarProximaSemi = true;  // Forzar la salida (En una semi (90°) con línea delante)
         puedeLaser = false;
         return;
-      } else {
-        // *** NUEVO: Final sin marcas → detener 5 segundos y terminar ***
+      } else {  // Si no hay marcas guardadas
+        //No hay cuadrado, por lo tanto es el final
         Motor(0, 0);
-        delay(500);
+        delay(500);  // Se detiene
         for (int i = 0; i < 3; i++) {
-          digitalWrite(LED, HIGH);
+          digitalWrite(LED, HIGH); // Juego de luces (3)
           delay(500);
           digitalWrite(LED, LOW);
           delay(500);
         }
         while (true) {}  // fin
       }
-    } else {
-      // COMPLETA con línea → comportamiento normal: recto un poco
+    } else { // Intersección con línea delante
+      // Se puede saltar con normalidad (espero...)
       Motor(40, 40);
       delay(140);
       Motor(0, 0);
@@ -327,6 +332,14 @@ void evaluarCruce() {
   }
 
   // --- Nada concluyente ---
+
+  /*
+  Si el código ha llegado hasta aquí, es que no ha ocurrido nada de lo especificado arriba.
+  Aunque es raro...
+  ¡No te preocupes, probablemente no sea el robot!
+  Sino el programador...
+  */
+
   Motor(0, 0);
   while (true) {}
 }
