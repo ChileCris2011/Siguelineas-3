@@ -10,7 +10,8 @@ void setup() {
   }
 }
 void loop() {
-  Motor(100, 100);
+  Motor(70, 70);
+  /*
   delay(750);
   Motor(-100, -100);
   delay(750);
@@ -21,4 +22,5 @@ void loop() {
   Motor(0, 0);
   while (digitalRead(BOTON) == 0) {
   }
+  */
 }

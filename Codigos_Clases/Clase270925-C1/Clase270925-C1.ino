@@ -111,8 +111,8 @@ void loop() {
     } else {
       claser = 0;
     }
-    if (claser > 5) {   // Detecta un objeto (~10cm)
-      Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
+    if (claser > 5) {  // Detecta un objeto (~10cm)
+      Motor(-50, -50);      // Retrocede para no golpear el objeto al girar
       delay(700);
       Motor(0, 0);
       delay(200);
@@ -229,6 +229,7 @@ void evaluarCruce() {
 
   // (4) Detenerse
   Motor(0, 0);
+  delay(100);
 
   // (5) Revisar si hay línea al frente (lectura estática final)
   qtr.read(sensorValues);
@@ -246,7 +247,7 @@ void evaluarCruce() {
   if (vioIzq ^ vioDer) {        // Si SOLO vio UN lado
     if (hayLineaFinal) {        // Si hay línea delante
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
-        Motor(velocidadBaseIzq - 25, velocidadBaseDer - 25);
+        Motor(40, 40);
         delay(500);
         if (vioIzq) {
           girarCrudo(0);
@@ -284,14 +285,10 @@ void evaluarCruce() {
       delay(500);
       puedeLaser = true;
       if (vioIzq) {
-        girarCrudo(0);
-        delay(666);
         giroWhile(0);
         return;
       }
       if (vioDer) {
-        girarCrudo(1);
-        delay(666);
         giroWhile(1);
         return;
       }
@@ -311,7 +308,7 @@ void evaluarCruce() {
         totalMarcasGuardadas--;
 
         // Ejecutar el giro
-        Motor(velocidadBaseIzq - 25, velocidadBaseDer - 25);
+        Motor(40, 40);
         delay(500);
         if (dir < 0) giroWhile(0);
         else giroWhile(1);
@@ -348,5 +345,6 @@ void evaluarCruce() {
   Sino el programador...
   */
 
-  Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
+  Motor(0, 0);
+  while (true) {}
 }

@@ -22,7 +22,7 @@ void Motoriz(int valueiz) {
     digitalWrite(BIN2, HIGH);
     valueiz = -valueiz;
   }
-  ledcWrite(1, valueiz); // ← CAMBIADO de 0 a 1
+  ledcWrite(1, valueiz);  // ← CAMBIADO de 0 a 1
 }
 
 // Función para el motor derecho
@@ -35,7 +35,10 @@ void Motorde(int valueder) {
     digitalWrite(AIN2, HIGH);
     valueder = -valueder;
   }
-  ledcWrite(0, valueder); // ← CAMBIADO de 1 a 0
+  if (valueder > 15) {
+    valueder += 15;
+  }
+  ledcWrite(0, valueder);  // ← CAMBIADO de 1 a 0
 }
 
 
