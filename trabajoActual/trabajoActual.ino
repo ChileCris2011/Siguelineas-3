@@ -50,8 +50,8 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.15, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBaseIzq = 70;
-const int velocidadBaseDer = 88;
+const int velocidadBaseIzq = 85;
+const int velocidadBaseDer = 85;
 
 const int baseGiros = 80;
 
@@ -197,7 +197,7 @@ void evaluarCruce() {
 
   // Umbrales
   const int TH_LADO = 4000;    // extremos (0 y 7)
-  const int TH_CENTRO = 3800;  // centrales (2..5) para "hay línea al frente"
+  const int TH_CENTRO = 4000;  // centrales (2..5) para "hay línea al frente"
 
   Motor(velocidadBaseIzq - 25, velocidadBaseDer - 25);
 
@@ -226,6 +226,8 @@ void evaluarCruce() {
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - 30, velocidadBaseDer - 30);
   }
+  
+  delay(88);
 
   // (4) Detenerse
   Motor(0, 0);
@@ -243,8 +245,12 @@ void evaluarCruce() {
   // (6) Tomar decisión
 
   // --- SEMI-INTERSECCIÓN (solo un lado) ---
-  if (vioIzq ^ vioDer) {        // Si SOLO vio UN lado
-    if (hayLineaFinal) {        // Si hay línea delante
+  if (vioIzq ^ vioDer) {  // Si SOLO vio UN lado
+    if (hayLineaFinal) {  // Si hay línea delante
+      Motor(0, 0);
+      digitalWrite(LED, HIGH);
+      delay(500);
+      digitalWrite(LED, LOW);
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
         Motor(velocidadBaseIzq - 25, velocidadBaseDer - 25);
         delay(500);
@@ -259,7 +265,7 @@ void evaluarCruce() {
         }
         forzarProximaSemi = false;  // consumir la orden
         // Marcar posicion giroscopio ** <- ???
-        //puedeLaser = true;  // Activa la detección (Cambiar segun la ubicacion del obstaculo)
+        //puedeLaser = true;  // Activa la detecciónb (Cambiar segun la ubicacion del obstaculo)
         return;
       }
 
