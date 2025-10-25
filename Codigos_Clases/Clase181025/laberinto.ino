@@ -65,10 +65,10 @@ void labirint() {
         Motor(0, 0);
         break;
       }
-      if (dishtancia < distDetec && dishtancia > 15) {
+      if (dishtancia < distDetec && dishtancia > distDetec - 25) {
         break;
       }
-      delay(100);
+      delay(25);
     }
     if (line) {
       while (sensorValues[0] > 3800 && sensorValues[7] > 3800) {
@@ -92,9 +92,10 @@ void labirint() {
       dishtancia = lox.readRange();
     }
     if (dishtancia < distDetec && dishtancia > distDetec - 25) {
-      girarDerecha(175);
       SerialBT.print("Labirint | Giro 180, ");
       SerialBT.println(dishtancia);
+      
+      girarDerecha(175);
     }
   }
 }
