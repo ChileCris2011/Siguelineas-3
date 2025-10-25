@@ -32,9 +32,9 @@ void girarIzquierda(float grados) {
 
 void girar(int direccion) {
   if (direccion == 1) {
-    girarDerecha(85);
+    girarDerecha(90);
   } else {
-    girarIzquierda(85);
+    girarIzquierda(90);
   }
 }
 

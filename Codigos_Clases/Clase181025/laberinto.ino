@@ -1,10 +1,43 @@
-const int distDetec = 100;
+const int distDetec = 166;
 
 int dishtancia = 0;
 
 void labirint() {
   bool line = false;
   delay(1000);
+  digitalWrite(LED, HIGH);
+  while (true) {
+    qtr.read(sensorValues);
+    Motor(-20, -20);
+    if (sensorValues[0] > 4000) {
+      while (true) {
+        qtr.read(sensorValues);
+        Motor(0, -10);
+        if (sensorValues[7] > 4000) {
+          Motor(0, 0);
+          break;
+        }
+      }
+      break;
+    }
+    if (sensorValues[7] > 4000) {
+      while (true) {
+        qtr.read(sensorValues);
+        Motor(-10, 0);
+        if (sensorValues[0] > 4000) {
+          Motor(0, 0);
+          break;
+        }
+      }
+      break;
+    }
+  }
+  while (sensorValues[0] > 4000 && sensorValues[7] > 4000) {
+    qtr.read(sensorValues);
+    Motor(20, 20);
+  }
+  digitalWrite(LED, LOW);
+  delay(200);
   digitalWrite(LED, HIGH);
   while (true) {
     while (true) {
@@ -32,9 +65,10 @@ void labirint() {
         Motor(0, 0);
         break;
       }
-      if (dishtancia < distDetec && dishtancia > distDetec - 25) {
+      if (dishtancia < distDetec && dishtancia > 15) {
         break;
       }
+      delay(100);
     }
     if (line) {
       while (sensorValues[0] > 3800 && sensorValues[7] > 3800) {
@@ -48,7 +82,7 @@ void labirint() {
     SerialBT.print("Labirint | Giro 90, ");
     SerialBT.println(dishtancia);
 
-    girarIzquierda(85);
+    girarIzquierda(84);
 
     Motor(0, 0);
     delay(1000);
