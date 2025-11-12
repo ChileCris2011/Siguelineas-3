@@ -47,7 +47,7 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.5, Ki = 0.0, Kd = 0.5;
+float Kp = 0.6, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
 const int velocidadBaseIzq = 85;
@@ -63,6 +63,7 @@ const int baseGiros = 80;
 int claser = 0;
 
 int contador = 0;
+int contadordes = 0;          
 
 int aclaser = 0;
 
@@ -89,6 +90,8 @@ bool marcaGuardada = false;  // indica si ya se guardó la primera marca
 
 const int freq = 5000;
 const int resolution = 8;
+
+unsigned long inicioescalera = 0;
 
 
 void inicializarMotores();
@@ -158,8 +161,8 @@ void loop() {
     }
   }
 
-  if (contador == 9){
-    
+  if (contador == 3 && (millis() - inicioescalera) >= 6000) {
+    contador++;
   }
 
   qtr.read(sensorValues);  // Lectura de los sensores de línea
@@ -190,7 +193,7 @@ void loop() {
   }
 
   // Disparador de cruce por extremos
-  if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
+  if ((sensorValues[0] > 4000 || sensorValues[7] > 4000) && contador != 3) evaluarCruce();
 
   // Seguimiento de línea normal
   PID(position);
@@ -305,20 +308,26 @@ void evaluarCruce() {
         girarCrudo(0);
         delay(666);
         giroWhile(0);
-        Motor(-velocidadBaseIzq, -velocidadBaseDer);
-        delay(200);
         Motor(0, 0);
-        contador++;
+        if (contadordes >= 4) {
+          contador++;
+        }
+        if (contador == 3) {
+          inicioescalera = millis();
+        }
         return;
       }
       if (vioDer) {
         girarCrudo(1);
         delay(666);
         giroWhile(1);
-        Motor(-velocidadBaseIzq, -velocidadBaseDer);
-        delay(200);
         Motor(0, 0);
-        contador++;
+        if (contadordes >= 4) {
+          contador++;
+        }
+        if (contador == 3) {
+          inicioescalera = millis();
+        }
         return;
       }
     }
@@ -361,6 +370,7 @@ void evaluarCruce() {
       Motor(40, 40);
       delay(140);
       Motor(0, 0);
+      contadordes++;
       return;
     }
   }
