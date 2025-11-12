@@ -47,7 +47,7 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.15, Ki = 0.0, Kd = 0.5;
+float Kp = 0.3, Ki = 0.0, Kd = 0.7;
 int lastError = 0, integral = 0;
 int umbral = 4000;
 const int velocidadBaseIzq = 85;
@@ -231,7 +231,7 @@ void evaluarCruce() {
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
   }
-  
+
   delay(88);
 
   // (4) Detenerse
@@ -250,8 +250,8 @@ void evaluarCruce() {
   // (6) Tomar decisión
 
   // --- SEMI-INTERSECCIÓN (solo un lado) ---
-  if (vioIzq ^ vioDer) {  // Si SOLO vio UN lado
-    if (hayLineaFinal) {  // Si hay línea delante
+  if (vioIzq ^ vioDer) {        // Si SOLO vio UN lado
+    if (hayLineaFinal) {        // Si hay línea delante
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
         Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
@@ -294,12 +294,18 @@ void evaluarCruce() {
         girarCrudo(0);
         delay(666);
         giroWhile(0);
+        Motor(-velocidadBaseIzq, -velocidadBaseDer);
+        delay(200);
+        Motor(0, 0);
         return;
       }
       if (vioDer) {
         girarCrudo(1);
         delay(666);
         giroWhile(1);
+        Motor(-velocidadBaseIzq, -velocidadBaseDer);
+        delay(200);
+        Motor(0, 0);
         return;
       }
     }
