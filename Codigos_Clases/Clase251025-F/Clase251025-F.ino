@@ -47,7 +47,7 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.3, Ki = 0.0, Kd = 0.7;
+float Kp = 0.5, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
 const int velocidadBaseIzq = 85;
@@ -61,6 +61,10 @@ const int delayBase = 200;
 const int baseGiros = 80;
 
 int claser = 0;
+
+int contador = 0;
+
+int aclaser = 0;
 
 // ----------------- Estados
 bool escaneando = false;
@@ -147,8 +151,15 @@ void loop() {
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
-      blockLaser = true;  // Bloquea el laser para que no siga leyendo
+      aclaser++;
+      if (aclaser >= 2) {
+        blockLaser = true;  // Bloquea el laser para que no siga leyendo
+      }
     }
+  }
+
+  if (contador == 9){
+    
   }
 
   qtr.read(sensorValues);  // Lectura de los sensores de línea
@@ -297,6 +308,7 @@ void evaluarCruce() {
         Motor(-velocidadBaseIzq, -velocidadBaseDer);
         delay(200);
         Motor(0, 0);
+        contador++;
         return;
       }
       if (vioDer) {
@@ -306,6 +318,7 @@ void evaluarCruce() {
         Motor(-velocidadBaseIzq, -velocidadBaseDer);
         delay(200);
         Motor(0, 0);
+        contador++;
         return;
       }
     }
