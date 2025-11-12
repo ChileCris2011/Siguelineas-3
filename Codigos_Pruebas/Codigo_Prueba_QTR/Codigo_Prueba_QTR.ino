@@ -5,7 +5,7 @@
 QTRSensors sigueLineas;
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Fallo de bluetooth
+#error Bluetooth no esta activado o la placa no lo contiene
 #endif
 
 BluetoothSerial SerialBT;
@@ -31,14 +31,26 @@ void setup() {
 }
 void loop() {
   sigueLineas.read(sensorValues);
-  for (int i = 0; i < 8; i++) {
-    SerialBT.print(sensorValues[i]);
-    SerialBT.print("  ");
-  }
-  SerialBT.print(" | ");
 
-  int posicion = sigueLineas.readLineBlack(sensorValues);
-  posicion = map(posicion, 0, 7000, -1000, 1000);  // Se mapea a un valor entre -255 y 255 (No se que pasa aqui)
-  posicion = constrain(posicion, -255, 255);
-  SerialBT.println(posicion);
+  // Filtrado simple para el cálculo de posición
+  for (uint8_t i = 0; i < SensorCount; i++) {
+    if (sensorValues[i] < 3500) sensorValues[i] = 0;
+    SerialBT.print(sensorValues[i]);
+    SerialBT.print(" ");
+  }
+
+  SerialBT.print("| ");
+
+  // Posición manual ponderada
+  uint32_t sumaPesada = 0;
+  uint32_t sumaTotal  = 0;
+  for (uint8_t i = 0; i < SensorCount; i++) {
+    sumaPesada += (uint32_t)sensorValues[i] * (i * 1000);
+    sumaTotal  += sensorValues[i];
+  }
+  uint16_t position = (sumaTotal > 0) ? (sumaPesada / sumaTotal) : 0;
+
+  SerialBT.println(position);
+  delay(100);
+
 }

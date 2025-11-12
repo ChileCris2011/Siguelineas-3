@@ -20,13 +20,13 @@ Robot 2:
   BIN2 18
   PWMB 19
 
-  /////////
-  LOW
-  HIGH
+  /////////////
+  LOW     HIGH
+  HIGH    LOW
 
-  HIGH
-  LOW
-  /////////
+  HIGH    LOW
+  LOW     HIGH
+  /////////////
 
   Cable X (color) Y (posicion)
 Robot 3:
@@ -37,13 +37,13 @@ Robot 3:
   BIN2 18
   PWMB 19
   
-  /////////
-  HIGH
-  LOW
+  /////////////
+  HIGH    HIGH
+  LOW     LOW
 
-  LOW
-  HIGH
-  /////////
+  LOW     LOW
+  HIGH    HIGH
+  /////////////
 
-  Cable Verde Adelante
+  Cable Verde Atrás
 ************************************/
