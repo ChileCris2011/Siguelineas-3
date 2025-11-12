@@ -11,13 +11,13 @@
 BluetoothSerial SerialBT;
 
 /*
-// Ésto está aquí para poder revisar el código sin necesidad de tener la placa esp32 instalada
-// Define funciones LedC que solo la version 2.x del esp32 contiene
-// Recuerda comentar ésto si lo vas a subir, o descomentarlo si no vas a usar la esp32
+  // Ésto está aquí para poder revisar el código sin necesidad de tener la placa esp32 instalada
+  // Define funciones LedC que solo la version 2.x del esp32 contiene
+  // Recuerda comentar ésto si lo vas a subir, o descomentarlo si no vas a usar la esp32
 
-void ledcWrite(uint8_t pin, uint32_t duty) {}
-void ledcSetup(uint8_t chan, uint32_t freq, uint8_t bit_num) {}
-void ledcAttachPin(uint8_t pin, uint8_t chan) {}
+  void ledcWrite(uint8_t pin, uint32_t duty) {}
+  void ledcSetup(uint8_t chan, uint32_t freq, uint8_t bit_num) {}
+  void ledcAttachPin(uint8_t pin, uint8_t chan) {}
 
 */
 
@@ -97,6 +97,8 @@ bool marcaGuardada = false;  // indica si ya se guardó la primera marca
 const int freq = 5000;
 const int resolution = 8;
 
+int contlaser = 0;
+
 
 void inicializarMotores();
 void Motor(int velIzq, int velDer);
@@ -160,7 +162,10 @@ void loop() {
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
-      blockLaser = true;  // Bloquea el laser para que no siga leyendo
+      contlaser++;
+      if (contlaser >= 2) {
+        blockLaser = true;  // Bloquea el laser para que no siga leyendo
+      }
     }
   }
 
@@ -208,8 +213,8 @@ void evaluarCruce() {
   static int contadorCruce = 0;
 
   /*
-  Ahora se llama directamente a la función evaluarCruce() y se hace la verificación
-  dentro para evitar que el PID actúe en los giros, enchuecando el robot
+    Ahora se llama directamente a la función evaluarCruce() y se hace la verificación
+    dentro para evitar que el PID actúe en los giros, enchuecando el robot
   */
 
   // (1) Verificar para evitar falsos positivos
@@ -335,7 +340,7 @@ void evaluarCruce() {
       puedeLaser = true;
       if (vioIzq) {
         girarCrudo(0);
-        delay(666);
+        delay(333);
         giroWhile(0);
         Motor(0, 0);
         delay(delayBase);
@@ -347,12 +352,12 @@ void evaluarCruce() {
       }
       if (vioDer) {
         girarCrudo(1);
-        delay(666);
+        delay(333);
         giroWhile(1);
         Motor(0, 0);
         delay(delayBase);
-        Motor(-velocidadBaseIzq + 70, -velocidadBaseDer + 70);
-        delay(450);
+        Motor(-velocidadBaseIzq, -velocidadBaseDer);
+        delay(200);
         Motor(0, 0);
         delay(delayBase);
         return;
@@ -364,14 +369,16 @@ void evaluarCruce() {
   if (vioIzq && vioDer) {
     if (!hayLineaFinal) {  // Si no hay linea delante
 
-      if (distLab < distEntrance && !blockLabirint) {
+      /*
+        if (distLab < distEntrance && !blockLabirint) {
         SerialBT.println("Laberinto...");
         Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
         delay(delayBase);
         labirint();
         digitalWrite(LED, LOW);
         return;
-      }
+        }
+      */
 
       if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
         SerialBT.println("Cuadrado...");
@@ -418,10 +425,10 @@ void evaluarCruce() {
   // --- Nada concluyente ---
 
   /*
-  Si el código ha llegado hasta aquí, es que no ha ocurrido nada de lo especificado arriba.
-  Aunque es raro...
-  ¡No te preocupes, probablemente no sea el robot!
-  Sino el programador...
+    Si el código ha llegado hasta aquí, es que no ha ocurrido nada de lo especificado arriba.
+    Aunque es raro...
+    ¡No te preocupes, probablemente no sea el robot!
+    Sino el programador...
   */
 
   SerialBT.println("Nada concluyente...");
