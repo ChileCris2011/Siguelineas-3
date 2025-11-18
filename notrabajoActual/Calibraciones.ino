@@ -1,9 +1,9 @@
 void calibracionSensores() {
   // Configuración QTR
   qtr.setTypeAnalog();
-  qtr.setSensorPins((const uint8_t[]){
-                      36, 39, 34, 35, 32, 33, 25, 26 },
-                    SensorCount);
+  qtr.setSensorPins((const uint8_t[]) {
+    36, 39, 34, 35, 32, 33, 25, 26
+  }, SensorCount);
   qtr.setEmitterPin(27);
 
   // Calibración QTR
@@ -23,7 +23,7 @@ void calibracionSensores() {
       delay(500);
     }
   }
-  lox.startRangeContinuous();  // Empieza la lectura contínua del láser
+  lox.startRangeContinuous(); // Empieza la lectura contínua del láser
 }
 void calibracionGiroscopio() {
   // Configuración MPU

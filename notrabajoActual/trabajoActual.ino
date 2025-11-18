@@ -47,7 +47,7 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.6, Ki = 0.0, Kd = 0.5;
+float Kp = 0.15, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
 const int velocidadBaseIzq = 85;
@@ -61,11 +61,6 @@ const int delayBase = 200;
 const int baseGiros = 80;
 
 int claser = 0;
-
-int contador = 0;
-int contadordes = 0;          
-
-int aclaser = 0;
 
 // ----------------- Estados
 bool escaneando = false;
@@ -90,8 +85,6 @@ bool marcaGuardada = false;  // indica si ya se guardó la primera marca
 
 const int freq = 5000;
 const int resolution = 8;
-
-unsigned long inicioescalera = 0;
 
 
 void inicializarMotores();
@@ -123,7 +116,7 @@ void loop() {
     } else {
       claser = 0;
     }
-    if (claser > 1000) {   // Detecta un objeto (~10cm)
+    if (claser > 5) {   // Detecta un objeto (~10cm)
       Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
       delay(700);
       Motor(0, 0);
@@ -154,15 +147,8 @@ void loop() {
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
-      aclaser++;
-      if (aclaser >= 2) {
-        blockLaser = true;  // Bloquea el laser para que no siga leyendo
-      }
+      blockLaser = true;  // Bloquea el laser para que no siga leyendo
     }
-  }
-
-  if (contador == 3 && (millis() - inicioescalera) >= 6000) {
-    contador++;
   }
 
   qtr.read(sensorValues);  // Lectura de los sensores de línea
@@ -193,7 +179,7 @@ void loop() {
   }
 
   // Disparador de cruce por extremos
-  if ((sensorValues[0] > 4000 || sensorValues[7] > 4000) && contador != 3) evaluarCruce();
+  if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
 
   // Seguimiento de línea normal
   PID(position);
@@ -245,7 +231,7 @@ void evaluarCruce() {
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
   }
-
+  
   delay(88);
 
   // (4) Detenerse
@@ -264,8 +250,8 @@ void evaluarCruce() {
   // (6) Tomar decisión
 
   // --- SEMI-INTERSECCIÓN (solo un lado) ---
-  if (vioIzq ^ vioDer) {        // Si SOLO vio UN lado
-    if (hayLineaFinal) {        // Si hay línea delante
+  if (vioIzq ^ vioDer) {  // Si SOLO vio UN lado
+    if (hayLineaFinal) {  // Si hay línea delante
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
         Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
@@ -308,26 +294,12 @@ void evaluarCruce() {
         girarCrudo(0);
         delay(666);
         giroWhile(0);
-        Motor(0, 0);
-        if (contadordes >= 4) {
-          contador++;
-        }
-        if (contador == 3) {
-          inicioescalera = millis();
-        }
         return;
       }
       if (vioDer) {
         girarCrudo(1);
         delay(666);
         giroWhile(1);
-        Motor(0, 0);
-        if (contadordes >= 4) {
-          contador++;
-        }
-        if (contador == 3) {
-          inicioescalera = millis();
-        }
         return;
       }
     }
@@ -370,7 +342,6 @@ void evaluarCruce() {
       Motor(40, 40);
       delay(140);
       Motor(0, 0);
-      contadordes++;
       return;
     }
   }

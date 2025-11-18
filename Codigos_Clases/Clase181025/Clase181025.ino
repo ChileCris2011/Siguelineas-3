@@ -58,10 +58,10 @@ int umbral = 4000;
 const int velocidadBaseIzq = 105;
 const int velocidadBaseDer = 105;
 
-const int delayBase = 65;
+const int delayBase = 200;
 const int restaBase = 30;
 const int baseGiros = 50;
-const int deteccionBase = 200;
+const int deteccionBase = 50;
 
 const int distEntrance = 1200;
 
@@ -125,7 +125,8 @@ void setup() {
 void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
     int lecturaMM = lox.readRange();
-    if (lecturaMM < 200) {
+    SerialBT.println(lecturaMM);
+    if (lecturaMM < 100) {
       claser++;
     } else {
       claser = 0;
@@ -169,8 +170,10 @@ void loop() {
     }
   }
 
-  if ((millis() - inicioCuadrado) >= vencimiento) {
+  if (inicioCuadrado != -1 && (millis() - inicioCuadrado) >= vencimiento) {
     forzarProximaSemi = false;
+    inicioCuadrado = -1;
+    SerialBT.println("Marca quemada!");
   }
 
 
@@ -311,6 +314,7 @@ void evaluarCruce() {
           giroWhile(1);
         }
         forzarProximaSemi = false;  // consumir la orden
+        inicioCuadrado = -1;
         // Marcar posicion giroscopio ** <- ???
         //puedeLaser = true;  // Activa la detecciónb (Cambiar segun la ubicacion del obstaculo)
         return;
@@ -344,20 +348,12 @@ void evaluarCruce() {
         giroWhile(0);
         Motor(0, 0);
         delay(delayBase);
-        Motor(-velocidadBaseIzq, -velocidadBaseDer);
-        delay(200);
-        Motor(0, 0);
-        delay(delayBase);
         return;
       }
       if (vioDer) {
         girarCrudo(1);
         delay(333);
         giroWhile(1);
-        Motor(0, 0);
-        delay(delayBase);
-        Motor(-velocidadBaseIzq, -velocidadBaseDer);
-        delay(200);
         Motor(0, 0);
         delay(delayBase);
         return;
