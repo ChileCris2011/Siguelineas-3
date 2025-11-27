@@ -1,4 +1,4 @@
-const int distDetec  166;
+const int distDetec = 166;
 
 int dishtancia = 0;
 
