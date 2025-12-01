@@ -7,6 +7,9 @@
 #define BIN2 18
 #define PWMB 19
 
+#define TRIG_PIN 14
+#define ECHO_PIN 13
+
 // Botón
 #define BOTON 12
 

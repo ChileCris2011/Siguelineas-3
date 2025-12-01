@@ -55,7 +55,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.18, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBaseIzq = 105;
+const int velocidadBaseIzq = 110;
 const int velocidadBaseDer = 105;
 
 const int delayBase = 200;
@@ -365,7 +365,6 @@ void evaluarCruce() {
   if (vioIzq && vioDer) {
     if (!hayLineaFinal) {  // Si no hay linea delante
 
-      /*
         if (distLab < distEntrance && !blockLabirint) {
         SerialBT.println("Laberinto...");
         Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
@@ -374,7 +373,6 @@ void evaluarCruce() {
         digitalWrite(LED, LOW);
         return;
         }
-      */
 
       if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
         SerialBT.println("Cuadrado...");
