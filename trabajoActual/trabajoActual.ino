@@ -55,8 +55,8 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.18, Ki = 0.0, Kd = 0.5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBaseIzq = 70;
-const int velocidadBaseDer = 70;
+const int velocidadBaseIzq = 105;
+const int velocidadBaseDer = 105;
 
 const int delayBase = 200;
 const int restaBase = 30;
@@ -108,7 +108,6 @@ void girarIzquierda(float grados);
 void girarDerecha(float grados);
 void PID(uint16_t position);
 void guardarMarca();
-bool canEvade(float th);
 
 void setup() {
   Serial.begin(115200);
@@ -208,7 +207,7 @@ void loop() {
   }
 
   // Disparador de cruce por extremos
-  if ((sensorValues[0] > 4000 || sensorValues[7] > 4000)) evaluarCruce();
+  if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
 
   // Seguimiento de línea normal
   PID(position);
@@ -473,15 +472,4 @@ void evaluarCruce() {
   SerialBT.println("Nada concluyente...");
 
   Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
-}
-
-bool canEvade(float th) {
-  mpu.update();
-  float cabeceo = mpu.getAngleY();
-  SerialBT.print("Cabeceo: ");
-  SerialBT.println(cabeceo);
-  if (cabeceo > th || cabeceo < -th) {
-    return false;
-  }
-  return true;
 }
