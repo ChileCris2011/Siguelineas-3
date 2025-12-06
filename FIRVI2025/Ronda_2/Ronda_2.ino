@@ -54,7 +54,7 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.20, Ki = 0.0, Kd = 0.58;
+float Kp = 0.17, Ki = 0.1, Kd = 0.274;
 int lastError = 0, integral = 0;
 int umbral = 4000;
 const int velocidadBaseIzq = 105;
