@@ -12,9 +12,6 @@
 
 #define LED 2
 
-#define TRIG_PIN 14
-#define ECHO_PIN 13
-
 /***********************************
 Robot 2:
   AIN1 16

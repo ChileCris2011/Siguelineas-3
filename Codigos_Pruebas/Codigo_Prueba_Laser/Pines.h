@@ -7,3 +7,5 @@
 #define PWMB 19
 
 #define BOTON 12
+
+#define LED 2

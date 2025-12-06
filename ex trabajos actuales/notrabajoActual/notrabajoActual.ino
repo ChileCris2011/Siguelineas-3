@@ -99,8 +99,6 @@ const int resolution = 8;
 
 int contlaser = 0;
 
-float distancia;
-bool lab = false;
 
 void inicializarMotores();
 void Motor(int velIzq, int velDer);
@@ -111,7 +109,7 @@ void guardarMarca();
 
 void setup() {
   Serial.begin(115200);
-  SerialBT.begin("Project Manhattan");
+  SerialBT.begin("|3|");
   inicializarMotores();
   pinMode(LED, OUTPUT);
   pinMode(BOTON, INPUT);
@@ -377,47 +375,7 @@ void evaluarCruce() {
         return;
         }
       */
-      if ((distLab < 1212) && (lab == false)) {
-        SerialBT.println("Laberinto...");
-        laberinto();
-        digitalWrite(LED, LOW);
-        unsigned long fia = millis();
-        while ((millis() - fia) < 200) {
-          bool nidpid = true;
-          qtr.read(sensorValues);  // Lectura de los sensores de línea
 
-          // Filtrado simple para el cálculo de posición
-          for (uint8_t i = 0; i < SensorCount; i++) {
-            if (sensorValues[i] < 4000) sensorValues[i] = 0;
-          }
-
-          // Posición manual ponderada
-          uint32_t sumaPesada = 0;
-          uint32_t sumaTotal = 0;
-          for (uint8_t i = 0; i < SensorCount; i++) {
-            sumaPesada += (uint32_t)sensorValues[i] * (i * 1000);
-            sumaTotal += sensorValues[i];
-          }
-          uint16_t position = (sumaTotal > 0) ? (sumaPesada / sumaTotal) : 0;
-
-          // ---- NUEVO: manejo de GAPS (todo blanco) ----
-          if (sumaTotal == 0) {
-            // Avanza recto con velocidad base para no “morir” en líneas segmentadas
-            Motor(velocidadBaseIzq - 10, velocidadBaseDer - 10);
-            // Evita acumular integral/derivativos inútiles
-            integral = 0;
-            lastError = 0;
-            // No corremos PID en esta iteración
-            nidpid = false;
-          }
-
-          // Seguimiento de línea normal
-          if (nidpid) {
-            PID(position);
-          }
-        }
-        return;
-      }
       if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
         SerialBT.println("Cuadrado...");
         int dir = marcaCuadradoDir[0];
