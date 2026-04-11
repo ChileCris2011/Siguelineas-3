@@ -128,7 +128,7 @@ void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
     int lecturaMM = lox.readRange();
     SerialBT.println(lecturaMM);
-    if (lecturaMM < 133) {
+    if (lecturaMM < 166) {
       claser++;
     } else {
       claser = 0;
@@ -139,7 +139,7 @@ void loop() {
       delay(700);
       Motor(0, 0);
       delay(200);
-      plusgirar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
+      girar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
       Motor(50, 50);
       delay(1500);  // Avanza
       Motor(0, 0);
@@ -165,7 +165,10 @@ void loop() {
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
-      blockLaser = true;
+      contlaser++;
+      if (contlaser >= 2) {
+        blockLaser = true;  // Bloquea el laser para que no siga leyendo
+      }
     }
   }
 
@@ -347,7 +350,7 @@ void evaluarCruce() {
       SerialBT.println("Giro 90...");
       Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
       delay(delayBase);
-      // puedeLaser = true;
+      puedeLaser = true;
       if (vioIzq) {
         girarCrudo(0);
         delay(333);
