@@ -1,3 +1,9 @@
+
+/*/********
+*
+*
+/*/********
+
 // Pines motores
 #include "Pines.h"
 
@@ -21,17 +27,8 @@ BluetoothSerial SerialBT;
 
 */
 
-//variables por entender
-bool primerCuadradoIzquierda = false;
-bool primerCuadradoDerecha = false;
-bool segundoCuadradoIzquierda = false;
-bool segundoCuadradoDerecha = false;
-int contadorCasosEspeciales = 0;
-bool huboLineaCentral = false;  // flag general
-
 int marcaCuadradoDir[2] = { 0, 0 };  // hasta 2 marcas: -1 izq, +1 der
 int totalMarcasGuardadas = 0;
-bool tieneMarcaCuadrado = false;
 bool forzarProximaSemi = false;
 
 int lastMark = -1;
@@ -46,7 +43,7 @@ const int evadirHacia = 0;  // 0 Izquierda | 1 Derecha
 
 
 // ----------------- Sensores QTR
-const uint8_t SensorCount = 8;
+const uint8_t SensorCount = 8; // numero de sensores
 uint16_t sensorValues[SensorCount];
 QTRSensors qtr;
 
@@ -56,18 +53,19 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 // ----------------- PID (modo normal)
 float Kp = 0.15, Ki = 0.0, Kd = 5;
 int lastError = 0, integral = 0;
-int umbral = 4000;
-const int velocidadBaseIzq = 105;
+
+const int umbral = 4000; // umbral de detección de la línea
+const int velocidadBaseIzq = 105; // nombres muy descriptivos ;)
 const int velocidadBaseDer = 105;
 
-const int delayBase = 200;
-const int restaBase = 30;
-const int baseGiros = 50;
-const int deteccionBase = 50;
+const int delayBase = 200; // delay estándar
+const int restaBase = 30; // resta para bajar la velocidad
+const int baseGiros = 50; // velocidad base para los giros
+const int deteccionBase = 50; // tiempo que detecta los casos especiales una vez que detecta uno
 
-const int distEntrance = 1200;
+const int distEntrance = 1200; // distancia de entrada al laberinto
 
-const long vencimiento = 15000;  // 15s
+const long vencimiento = 15000;  // vencimiento de marcas
 
 long inicioCuadrado = -1;
 
