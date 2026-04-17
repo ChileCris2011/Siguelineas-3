@@ -1,8 +1,12 @@
-
-/*/********
-*
-*
-/*/********
+/************************************************************************
+*                                                                       *
+*    SigueLineas |3|, 2026. Por el equipo |30| (treinta absoluto)       *
+*                                                                       *
+*    Para nuestros compañeros de clases y los demás equipos.            *
+*                                                                       *
+*    Recoleta, 2026. Licencia MIT (c) 2025 Ccris                        *
+*                                                                       *
+************************************************************************/
 
 // Pines motores
 #include "Pines.h"
@@ -64,6 +68,8 @@ const int baseGiros = 50; // velocidad base para los giros
 const int deteccionBase = 50; // tiempo que detecta los casos especiales una vez que detecta uno
 
 const int distEntrance = 1200; // distancia de entrada al laberinto
+const int distObj = 166; // distancia de detección del objeto
+const int verDist = 5; // cuantas lecturas seguidas por debajo del umbral para evadir el objeto
 
 const long vencimiento = 15000;  // vencimiento de marcas
 
@@ -71,7 +77,7 @@ long inicioCuadrado = -1;
 
 int claser = 0;
 
-float target_angle = 0;  // Ángulo objetivo (recto)
+float target_angle = 0;  // Ángulo objetivo (recto) (sin uso)
 
 // ----------------- Estados
 bool escaneando = false;
@@ -87,18 +93,12 @@ unsigned long tInicioScan = 0;
 MPU6050 mpu(Wire);
 float yawZero = 0.0;
 
-// ----------------- Flags de marca
-bool marcaPrimeraIzq = false;
-bool marcaPrimeraDer = false;
-bool marcaGuardada = false;  // indica si ya se guardó la primera marca
-
-// ----------------- Prototipos
-
+// ----------------- Salida Analógica
 const int freq = 5000;
 const int resolution = 8;
 
+// ----------------- Láser
 int contlaser = 0;
-
 
 void inicializarMotores();
 void Motor(int velIzq, int velDer);
@@ -108,31 +108,41 @@ void PID(uint16_t position);
 void guardarMarca();
 
 void setup() {
-  Serial.begin(115200);
-  SerialBT.begin("|3| 2");
-  inicializarMotores();
+  Serial.begin(115200); // Inicializar consola serial
+  SerialBT.begin("|30|"); // Inicializar consola bluetooth
+  
+  inicializarMotores(); // Inicializar motores
+
+  // Inicializar otros pines
   pinMode(LED, OUTPUT);
   pinMode(BOTON, INPUT);
 
-  calibracionSensores();
+  calibracionSensores(); // Calibrar sensores
+
+  // Indicación de inicio. Dejar quieto una vez que se prenda la luz!
   digitalWrite(LED, HIGH);
   delay(200);
   digitalWrite(LED, LOW);
   delay(200);
+
+  // Calibración de giroscopio. NO MOVER ROBOT!!!
   calibracionGiroscopio();
 }
 
 void loop() {
+  // Para validar la lectura: flag del laser activa, laser no bloqueado y laser dentro del rango (no está mirando el aire)
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
-    int lecturaMM = lox.readRange();
-    SerialBT.println(lecturaMM);
-    if (lecturaMM < 166) {
-      claser++;
+    int lecturaMM = lox.readRange(); // leer sensor
+    SerialBT.println(lecturaMM); // imprimir en consola bluetooth
+    
+    if (lecturaMM < distObj) { // si esta dentro del rango
+      claser++; // aumentar las lecturas seguidas
     } else {
-      claser = 0;
+      claser = 0; // si no, resetear
     }
-    if (claser > 5) {  // Detecta un objeto (~10cm)
-      SerialBT.println("Laser...");
+    
+    if (claser > verDist) {  // si se cumplen las n lecturas seguidas dentro del rango
+      SerialBT.println("Laser..."); // avisar por consola bluetooth la evasión
       Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
       delay(700);
       Motor(0, 0);
@@ -162,18 +172,19 @@ void loop() {
         qtr.read(sensorValues);
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
-      puedeLaser = false;
-      contlaser++;
-      if (contlaser >= 2) {
+      puedeLaser = false; // desactivar laser
+      contlaser++; // registrar la evasión
+      if (contlaser >= 2) { // Si ya se ha evadido 2 veces
         blockLaser = true;  // Bloquea el laser para que no siga leyendo
       }
     }
   }
 
-  if (inicioCuadrado != -1 && (millis() - inicioCuadrado) >= vencimiento) {
-    forzarProximaSemi = false;
-    inicioCuadrado = -1;
-    SerialBT.println("Marca quemada!");
+  // "quemado" de marcas
+  if (inicioCuadrado != -1 && (millis() - inicioCuadrado) >= vencimiento) { // si se ha entrado en un cuadrado, y ya ha pasado mas tiempo que el vencimiento
+    forzarProximaSemi = false; // desactivar forzado
+    inicioCuadrado = -1; // bajar flag de cuadrado
+    SerialBT.println("Marca quemada!"); // avisar por consola bluetooth
   }
 
 
@@ -193,7 +204,7 @@ void loop() {
   }
   uint16_t position = (sumaTotal > 0) ? (sumaPesada / sumaTotal) : 0;
 
-  // ---- NUEVO: manejo de GAPS (todo blanco) ----
+  // Manejo de gaps (espacios en blanco)
   if (sumaTotal == 0) {
     // Avanza recto con velocidad base para no “morir” en líneas segmentadas
     Motor(velocidadBaseIzq - 10, velocidadBaseDer - 10);
@@ -211,14 +222,14 @@ void loop() {
   PID(position);
 }
 
+/**
+ * @brief Evalúa casos especiales
+ * @param None
+ * @return None
+ */
 void evaluarCruce() {
 
-  static int contadorCruce = 0;
-
-  /*
-    Ahora se llama directamente a la función evaluarCruce() y se hace la verificación
-    dentro para evitar que el PID actúe en los giros, enchuecando el robot
-  */
+  static int contadorCruce = 0; // veces seguidas que se lee un cruce
 
   // (1) Verificar para evitar falsos positivos
 
@@ -227,7 +238,7 @@ void evaluarCruce() {
     if (sensorValues[0] > 4000 || sensorValues[7] > 4000) {
       contadorCruce++;
     } else {
-      while (true) {  // para seguir con la logica de bucle de loop
+      while (true) {  // loop
         loop();
       }
     }
