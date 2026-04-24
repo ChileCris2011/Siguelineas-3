@@ -1,0 +1,9 @@
+/************************************************************************
+*                                                                       *
+*    SigueLineas |3|, 2026. Por el equipo |30| (treinta absoluto)       *
+*                                                                       *
+*    Para nuestros compañeros de clases y los demás equipos.            *
+*                                                                       *
+*    Recoleta, 2026. Licencia MIT (c) 2025 Ccris                        *
+*                                                                       *
+************************************************************************/

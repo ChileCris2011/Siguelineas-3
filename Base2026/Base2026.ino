@@ -1,13 +1,3 @@
-/************************************************************************
-*                                                                       *
-*    SigueLineas |3|, 2026. Por el equipo |30| (treinta absoluto)       *
-*                                                                       *
-*    Para nuestros compañeros de clases y los demás equipos.            *
-*                                                                       *
-*    Recoleta, 2026. Licencia MIT (c) 2025 Ccris                        *
-*                                                                       *
-************************************************************************/
-
 // Pines motores
 #include "Pines.h"
 
@@ -46,9 +36,6 @@ bool forzarProximaSemi = false;
 
 int lastMark = -1;
 
-unsigned long lastTimes[2] = {};
-unsigned long conter = 0;
-
 bool blockLabirint = false;
 
 bool puedeLaser = true;
@@ -70,8 +57,8 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.15, Ki = 0.0, Kd = 5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBaseIzq = 100;
-const int velocidadBaseDer = 100;
+const int velocidadBaseIzq = 105;
+const int velocidadBaseDer = 105;
 
 const int delayBase = 200;
 const int restaBase = 30;
@@ -92,8 +79,6 @@ float target_angle = 0;  // Ángulo objetivo (recto)
 bool escaneando = false;
 bool flagIzquierda = false, flagDerecha = false;
 int filtroBordeCount = 0;
-unsigned long inEscalera = -1;
-const unsigned long salirEscalera = 15000;
 
 // ----------------- Tiempos
 const unsigned long tRetroceso = 350;
@@ -143,7 +128,7 @@ void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
     int lecturaMM = lox.readRange();
     SerialBT.println(lecturaMM);
-    if (lecturaMM < 130) {
+    if (lecturaMM < 133) {
       claser++;
     } else {
       claser = 0;
@@ -151,7 +136,7 @@ void loop() {
     if (claser > 5) {  // Detecta un objeto (~10cm)
       SerialBT.println("Laser...");
       Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
-      delay(800);
+      delay(700);
       Motor(0, 0);
       delay(200);
       plusgirar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
@@ -180,10 +165,7 @@ void loop() {
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
-      contlaser++;
-      if (contlaser >= 2) {
-        blockLaser = true;
-      }
+      blockLaser = true;
     }
   }
 
@@ -222,7 +204,7 @@ void loop() {
   }
 
   // Disparador de cruce por extremos
-  if ((sensorValues[0] > 4000 || sensorValues[7] > 4000)) evaluarCruce();
+  if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
 
   // Seguimiento de línea normal
   PID(position);
@@ -282,7 +264,7 @@ void evaluarCruce() {
 
   qtr.read(sensorValues);
 
-  while (sensorValues[0] > TH_LADO || sensorValues[7] > TH_LADO) {
+  while (sensorValues[0] > TH_LADO && sensorValues[7] > TH_LADO) {
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
   }
@@ -295,11 +277,10 @@ void evaluarCruce() {
   // (4) Revisar si hay línea al frente (primera lectura estática)
   qtr.read(sensorValues);
   bool hayLineaFinal = false;
-  for (int i = 0; i <= 100; i++) {
-    if (sensorValues[3] > TH_CENTRO || sensorValues[4] > TH_CENTRO) {
+  for (int i = 2; i <= 4; i++) {
+    if (sensorValues[i] > TH_CENTRO) {
       hayLineaFinal = true;
-    } else {
-      hayLineaFinal = false;
+      break;
     }
   }
 
@@ -355,8 +336,6 @@ void evaluarCruce() {
         }
         totalMarcasGuardadas++;
         lastMark = 2;
-      } else if (lastMark != 2 && lastMark != 5) {
-        SerialBT.println("Deteccion de marca, pero sin condiciones...");
       }
 
       Motor(40, 40);
@@ -368,38 +347,7 @@ void evaluarCruce() {
       SerialBT.println("Giro 90...");
       Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
       delay(delayBase);
-      puedeLaser = true;
-
-      lastTimes[1] = lastTimes[0];
-      lastTimes[0] = millis() - conter;
-
-      SerialBT.print("Tiempos: ");
-      SerialBT.print(lastTimes[0]);
-      SerialBT.print(", ");
-      SerialBT.println(lastTimes[1]);
-
-      conter = millis();
-
-      /*
-      if (lastTimes[0] < 2000 && lastTimes[1] < 2000 && lastTimes[1] != 0) {
-        SerialBT.println("Posibles escaleras...");
-        girarCrudo(1);
-        delay(200);
-        inEscalera = millis();
-        while ((millis() - inEscalera) < salirEscalera) {
-          qtr.read(sensorValues);
-          if (sensorValues[0] > umbral) {
-            Motor(-velocidadBaseIzq, restaBase);
-          } else if (sensorValues[7] > umbral) {
-            Motor(restaBase, -velocidadBaseDer);
-          } else {
-            Motor(velocidadBaseIzq, velocidadBaseDer);
-          }
-        }
-        SerialBT.println("Terminamos escaleras...");
-      }
-      */
-
+      // puedeLaser = true;
       if (vioIzq) {
         girarCrudo(0);
         delay(333);

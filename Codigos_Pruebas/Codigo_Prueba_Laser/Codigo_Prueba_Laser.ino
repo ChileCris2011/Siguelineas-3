@@ -15,7 +15,7 @@ const int resolution = 8;
 
 void setup() {
   Serial.begin(115200);
-  SerialBT.begin("Project Manhattan");
+  SerialBT.begin("|3| 2");
 
   Serial.println("Iniciando...");
 
