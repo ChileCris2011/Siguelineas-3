@@ -29,8 +29,8 @@ bool segundoCuadradoDerecha = false;
 int contadorCasosEspeciales = 0;
 bool huboLineaCentral = false;  // flag general
 
-int marcaCuadradoDir[2] = { 0, 0 };  // hasta 2 marcas: -1 izq, +1 der
-int totalMarcasGuardadas = 0;
+int marcaCuadradoDir[2] = { 1, 0 };  // hasta 2 marcas: -1 izq, +1 der
+int totalMarcasGuardadas = 1;
 bool tieneMarcaCuadrado = false;
 bool forzarProximaSemi = false;
 
@@ -57,8 +57,8 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 float Kp = 0.15, Ki = 0.0, Kd = 5;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBaseIzq = 110;
-const int velocidadBaseDer = 110;
+const int velocidadBaseIzq = 75;
+const int velocidadBaseDer = 75;
 
 const int delayBase = 250;
 const int restaBase = 30;
@@ -128,44 +128,49 @@ void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
     int lecturaMM = lox.readRange();
     SerialBT.println(lecturaMM);
-    if (lecturaMM < 133) {
+    if (lecturaMM < 166) {
       claser++;
     } else {
       claser = 0;
     }
     if (claser > 5) {  // Detecta un objeto (~10cm)
-      SerialBT.println("Laser...");
-      Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
-      delay(700);
+      Motor(-75, -75);
+      delay(500);
       Motor(0, 0);
       delay(200);
-      plusgirar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
-      Motor(50, 50);
-      delay(1500);  // Avanza
-      Motor(0, 0);
-      delay(200);
-      girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
-      Motor(50, 50);
-      delay(3750);  // Avanza
-      Motor(0, 0);
-      delay(200);
-      girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-      qtr.read(sensorValues);
-      while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-        qtr.read(sensorValues);  // Avanza hasta detectar la línea
-        Motor(50, 50);
+      girarDerecha(90);
+      lecturaMM = lox.readRange();
+      claser = 0;
+      while (true) {
+        lecturaMM = lox.readRange();
+        Motor(velocidadBaseIzq, velocidadBaseDer);
+        if (lecturaMM < 166) {
+          claser++;
+        } else {
+          claser = 0;
+        }
+        if (claser > 5) {
+          break;
+        }
       }
-      Motor(0, 0);
-      delay(200);
-      Motor(50, 50);  // Avanza un poco para girar bien
-      delay(666);
+      girarIzquierda(93);
+
       qtr.read(sensorValues);
-      while (sensorValues[4] < umbral) {
+      while (sensorValues[0] < 4000) {
         qtr.read(sensorValues);
-        girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
+        Motor(velocidadBaseIzq, velocidadBaseDer);
       }
-      puedeLaser = false;
-      blockLaser = true;
+      
+      SerialBT.println("¡Final!");
+      Motor(0, 0);
+      delay(500);  // Se detiene
+      for (int i = 0; i < 3; i++) {
+        digitalWrite(LED, HIGH);  // Juego de luces (3)
+        delay(500);
+        digitalWrite(LED, LOW);
+        delay(500);
+      }
+      while (true) {}  // fin
     }
   }
 
@@ -264,7 +269,7 @@ void evaluarCruce() {
 
   qtr.read(sensorValues);
 
-  while (sensorValues[0] > TH_LADO && sensorValues[7] > TH_LADO) {
+  while (sensorValues[0] > TH_LADO || sensorValues[7] > TH_LADO) {
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
   }
@@ -328,6 +333,7 @@ void evaluarCruce() {
       // Si NO hay forzado: guardar marca
       if (totalMarcasGuardadas < 2 && (lastMark == 2 || lastMark == 5)) {  // Si hay menos de 2 marcas guardadas
         SerialBT.println("Guardando Marca...");
+        /*
         if (vioIzq) {
           marcaCuadradoDir[totalMarcasGuardadas] = -1;
         }  // Guarda la marca en el lado que vió
@@ -336,11 +342,12 @@ void evaluarCruce() {
         }
         totalMarcasGuardadas++;
         lastMark = 2;
+        */
       } else if (lastMark != 2 && lastMark != 5) {
         SerialBT.println("Marca sin condicion...");
       }
 
-        Motor(40, 40);
+      Motor(40, 40);
       delay(140);
       Motor(0, 0);
       return;  // volver al PID
@@ -375,17 +382,6 @@ void evaluarCruce() {
   if (vioIzq && vioDer) {
     if (!hayLineaFinal) {  // Si no hay linea delante
 
-      /*
-        if (distLab < distEntrance && !blockLabirint) {
-        SerialBT.println("Laberinto...");
-        Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
-        delay(delayBase);
-        labirint();
-        digitalWrite(LED, LOW);
-        return;
-        }
-      */
-
       if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
         SerialBT.println("Cuadrado...");
         int dir = marcaCuadradoDir[0];
@@ -399,10 +395,11 @@ void evaluarCruce() {
         // Ejecutar el giro
         Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
-        if (dir < 0) giroWhile(0);
-        else giroWhile(1);
+        if (dir != 0) {
+          girarDerecha(180);
+        }
 
-        forzarProximaSemi = true;  // Forzar la salida (En una semi (90°) con línea delante)
+        //forzarProximaSemi = true;  // Forzar la salida (En una semi (90°) con línea delante)
         inicioCuadrado = millis();
         lastMark = 4;
         return;

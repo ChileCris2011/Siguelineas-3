@@ -60,7 +60,7 @@ int umbral = 4000;
 const int velocidadBaseIzq = 110;
 const int velocidadBaseDer = 110;
 
-const int delayBase = 250;
+const int delayBase = 300;
 const int restaBase = 30;
 const int baseGiros = 50;
 const int deteccionBase = 50;
@@ -116,7 +116,11 @@ void setup() {
   pinMode(LED, OUTPUT);
   pinMode(BOTON, INPUT);
 
-  calibracionSensores();
+  while (!digitalRead(BOTON)) {}
+
+  delay(200);
+
+  // calibracionSensores();
   digitalWrite(LED, HIGH);
   delay(200);
   digitalWrite(LED, LOW);
@@ -125,89 +129,15 @@ void setup() {
 }
 
 void loop() {
-  if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
-    int lecturaMM = lox.readRange();
-    SerialBT.println(lecturaMM);
-    if (lecturaMM < 133) {
-      claser++;
-    } else {
-      claser = 0;
-    }
-    if (claser > 5) {  // Detecta un objeto (~10cm)
-      SerialBT.println("Laser...");
-      Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
-      delay(700);
-      Motor(0, 0);
-      delay(200);
-      plusgirar(evadirHacia);  // Gira hacia el lado indicado en 'evadirHacia'
-      Motor(50, 50);
-      delay(1500);  // Avanza
-      Motor(0, 0);
-      delay(200);
-      girar(evadirHacia + 1);  // Gira hacia el lado contrario (No explicaré como funciona ;] )
-      Motor(50, 50);
-      delay(3750);  // Avanza
-      Motor(0, 0);
-      delay(200);
-      girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-      qtr.read(sensorValues);
-      while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-        qtr.read(sensorValues);  // Avanza hasta detectar la línea
-        Motor(50, 50);
-      }
-      Motor(0, 0);
-      delay(200);
-      Motor(50, 50);  // Avanza un poco para girar bien
-      delay(666);
-      qtr.read(sensorValues);
-      while (sensorValues[4] < umbral) {
-        qtr.read(sensorValues);
-        girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
-      }
-      puedeLaser = false;
-      blockLaser = true;
-    }
-  }
-
-  if (inicioCuadrado != -1 && (millis() - inicioCuadrado) >= vencimiento) {
-    forzarProximaSemi = false;
-    inicioCuadrado = -1;
-    SerialBT.println("Marca quemada!");
-  }
-
-
-  qtr.read(sensorValues);  // Lectura de los sensores de línea
-
-  // Filtrado simple para el cálculo de posición
-  for (uint8_t i = 0; i < SensorCount; i++) {
-    if (sensorValues[i] < 4000) sensorValues[i] = 0;
-  }
-
-  // Posición manual ponderada
-  uint32_t sumaPesada = 0;
-  uint32_t sumaTotal = 0;
-  for (uint8_t i = 0; i < SensorCount; i++) {
-    sumaPesada += (uint32_t)sensorValues[i] * (i * 1000);
-    sumaTotal += sensorValues[i];
-  }
-  uint16_t position = (sumaTotal > 0) ? (sumaPesada / sumaTotal) : 0;
-
-  // ---- NUEVO: manejo de GAPS (todo blanco) ----
-  if (sumaTotal == 0) {
-    // Avanza recto con velocidad base para no “morir” en líneas segmentadas
-    Motor(velocidadBaseIzq - 10, velocidadBaseDer - 10);
-    // Evita acumular integral/derivativos inútiles
-    integral = 0;
-    lastError = 0;
-    // No corremos PID en esta iteración
-    return;
-  }
-
-  // Disparador de cruce por extremos
-  if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
-
-  // Seguimiento de línea normal
-  PID(position);
+  Motor(velocidadBaseIzq, velocidadBaseDer);
+  delay(2000);
+  girarDerecha(90);
+  delay(100);
+  digitalWrite(LED, HIGH);
+  delay(200);
+  digitalWrite(LED, LOW);
+  while (!digitalRead(BOTON)) {}
+  delay(200);
 }
 
 void evaluarCruce() {
@@ -340,7 +270,7 @@ void evaluarCruce() {
         SerialBT.println("Marca sin condicion...");
       }
 
-        Motor(40, 40);
+      Motor(40, 40);
       delay(140);
       Motor(0, 0);
       return;  // volver al PID
