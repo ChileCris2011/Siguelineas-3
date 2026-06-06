@@ -73,3 +73,11 @@ void giroWhile(int direccion) {
     girarCrudo(direccion);
   }
 }
+
+void giroSal(int direccion) {
+  qtr.read(sensorValues);
+  while (sensorValues[3] > 3500 || sensorValues[4] > 3500) {
+    qtr.read(sensorValues);
+    girarCrudo(direccion);
+  }
+}

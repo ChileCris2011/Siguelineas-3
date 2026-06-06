@@ -15,7 +15,7 @@ const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
 void setup() {
-  inicializarQTR();
+  inicializarQTR(); 
   SerialBT.begin("|3|");
   while (digitalRead(BOTON) == 0) {
   }

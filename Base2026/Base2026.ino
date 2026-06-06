@@ -340,7 +340,7 @@ void evaluarCruce() {
         SerialBT.println("Marca sin condicion...");
       }
 
-        Motor(40, 40);
+      Motor(40, 40);
       delay(140);
       Motor(0, 0);
       return;  // volver al PID
