@@ -1,13 +1,3 @@
-/************************************************************************
-*                                                                       *
-*    SigueLineas |3|, 2026. Por el equipo |30| (treinta absoluto)       *
-*                                                                       *
-*    Para nuestros compañeros de clases y los demás equipos.            *
-*                                                                       *
-*    Recoleta, 2026. Licencia MIT (c) 2025 Ccris                        *
-*                                                                       *
-************************************************************************/
-
 // Pines motores
 #include "Pines.h"
 
@@ -133,18 +123,17 @@ void setup() {
   calibracionGiroscopio();
 }
 
-int lecturaMM = -1;
-
 void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
-    lecturaMM = lox.readRange();
+    int lecturaMM = lox.readRange();
+    SerialBT.println(lecturaMM);
     if (lecturaMM < 222) {
       claser++;
     } else {
       claser = 0;
     }
     if (claser > 5) {  // Detecta un objeto (~10cm)
-      updateLog(4);
+      SerialBT.println("Laser...");
       Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
       delay(700);
       Motor(0, 0);
@@ -162,7 +151,6 @@ void loop() {
       girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
       qtr.read(sensorValues);
       while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-        updateLog(4);
         qtr.read(sensorValues);  // Avanza hasta detectar la línea
         Motor(50, 50);
       }
@@ -172,15 +160,12 @@ void loop() {
       delay(666);
       qtr.read(sensorValues);
       while (sensorValues[4] < umbral) {
-        updateLog(4);
         qtr.read(sensorValues);
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
       blockLaser = true;
     }
-  } else {
-    lecturaMM = -1;  // No se está leyendo el sensor
   }
 
 
@@ -225,30 +210,8 @@ void loop() {
   // Disparador de cruce por extremos
   if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
 
-  updateLog(forzarProximaSemi ? 1 : 0);
-
   // Seguimiento de línea normal
   PID(position);
-}
-
-void updateLog(int actstat = 0) {
-  for (int i = 0; i < SensorCount; i++) {
-    SerialBT.print(sensorValues[i]);
-    if (i < 7) {
-      SerialBT.print("|");
-    }
-  }
-
-  SerialBT.print("/");
-  SerialBT.print(actstat);
-  SerialBT.print("/");
-  SerialBT.print(lastMark);
-  SerialBT.print("/");
-  SerialBT.print(marcaCuadradoDir[0]);
-  SerialBT.print("|");
-  SerialBT.print(marcaCuadradoDir[1]);
-  SerialBT.print("/");
-  SerialBT.println(lecturaMM);
 }
 
 void evaluarCruce() {
@@ -272,8 +235,6 @@ void evaluarCruce() {
       }
     }
   }
-
-  SerialBT.println("=");
 
   // Umbrales
   const int TH_LADO = 4000;    // extremos (0 y 7)
@@ -300,6 +261,11 @@ void evaluarCruce() {
     }
   }
 
+  SerialBT.print("vioIzq = ");
+  SerialBT.print(vioIzq);
+  SerialBT.print("\t vioDer = ");
+  SerialBT.print(vioDer);
+
   qtr.read(sensorValues);
 
   while (sensorValues[0] > TH_LADO && sensorValues[7] > TH_LADO) {
@@ -322,6 +288,9 @@ void evaluarCruce() {
     }
   }
 
+  SerialBT.print("\t Hay Linea = ");
+  SerialBT.print(hayLineaFinal);
+
   // (5) Revisar la distancia delante (lectura estática final)
 
   int distLab = 0;
@@ -330,17 +299,8 @@ void evaluarCruce() {
     distLab = lox.readRange();
   }
 
-  SerialBT.print(hayLineaFinal ? "1" : "0");
-  SerialBT.print("|");
-  SerialBT.print(vioIzq ? "1" : "0");
-  SerialBT.print("|");
-  SerialBT.print(vioDer ? "1" : "0");
-  SerialBT.print("|");
+  SerialBT.print("\t distLab = ");
   SerialBT.println(distLab);
-
-  delay(200);
-
-  SerialBT.println("=");
 
   // (6) Tomar decisión
 
@@ -349,6 +309,7 @@ void evaluarCruce() {
     if (hayLineaFinal) {  // Si hay línea delante
 
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
+        SerialBT.println("Forzando Semi...");
         Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
         if (vioIzq) {
@@ -370,25 +331,29 @@ void evaluarCruce() {
       }
 
       // Si NO hay forzado: guardar marca
-      if (totalMarcasGuardadas < 2 && (lastMark == 2 || lastMark == 3 || lastMark == 5)) {  // Si hay menos de 2 marcas guardadas
+      if (totalMarcasGuardadas < 2 && (lastMark == 2 || lastMark == 5)) {  // Si hay menos de 2 marcas guardadas
+        SerialBT.print("Guardando Marca");
         if (vioIzq) {
           marcaCuadradoDir[totalMarcasGuardadas] = -1;
-          lastMark = 2;
+          SerialBT.print(" (-1, Izq)");
         }  // Guarda la marca en el lado que vió
         if (vioDer) {
           marcaCuadradoDir[totalMarcasGuardadas] = 1;
-          lastMark = 3;
+          SerialBT.print(" (+1, Der)");
         }
         totalMarcasGuardadas++;
-      } else if (lastMark != 2 && lastMark != 3 && lastMark != 5) {
-        lastMark = 4;
+        lastMark = 2;
+      } else if (lastMark != 2 && lastMark != 5) {
+        SerialBT.print("Marca sin condicion");
       }
+      SerialBT.println("...");
 
       Motor(0, 0);
       delay(144);
       return;  // volver al PID
     } else {
       // SEMI sin línea → giro normal inmediato
+      SerialBT.println("Giro 90...");
       Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
       delay(delayBase);
       // puedeLaser = true;
@@ -397,7 +362,7 @@ void evaluarCruce() {
         Motor(0, 0);
         delay(200);
         giroWhile(0);
-        lastMark = 6;
+        lastMark = 3;
         return;
       }
       if (vioDer) {
@@ -405,7 +370,7 @@ void evaluarCruce() {
         Motor(0, 0);
         delay(200);
         giroWhile(1);
-        lastMark = 6;
+        lastMark = 3;
         return;
       }
     }
@@ -427,7 +392,13 @@ void evaluarCruce() {
       */
 
       if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
+        SerialBT.print("Cuadrado ");
         int dir = marcaCuadradoDir[0];
+
+        SerialBT.print(" (");
+        SerialBT.print(dir);
+        SerialBT.print(", ");
+        SerialBT.println((dir == 1) ? "Der)..." : "Izq)...");
 
         // Desplazar las marcas para que la segunda pase a ser primera
         for (int i = 0; i < totalMarcasGuardadas - 1; i++) {
@@ -443,9 +414,11 @@ void evaluarCruce() {
 
         forzarProximaSemi = true;  // Forzar la salida (En una semi (90°) con línea delante)
         inicioCuadrado = millis();
+        lastMark = 4;
         return;
       } else {  // Si no hay marcas guardadas
         //No hay cuadrado, por lo tanto es el final
+        SerialBT.println("¡Final!");
         Motor(0, 0);
         delay(500);  // Se detiene
         for (int i = 0; i < 3; i++) {
@@ -454,14 +427,15 @@ void evaluarCruce() {
           digitalWrite(LED, LOW);
           delay(500);
         }
-        SerialBT.println("4095|4095|4095|4095|4095|4095|4095|4095/-1/0/0|0/0") while (true) {}  // fin
+        while (true) {}  // fin
       }
     } else {  // Intersección con línea delante
       // Se puede saltar con normalidad (espero...)
+      SerialBT.println("Cruce...");
       Motor(40, 40);
       delay(140);
       Motor(0, 0);
-      lastMark = 7;
+      lastMark = 5;
       return;
     }
   }
@@ -475,6 +449,7 @@ void evaluarCruce() {
     Sino el programador...
   */
 
+  SerialBT.println("Nada concluyente...");
+
   Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
-  lastMark = -1;
 }

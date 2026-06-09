@@ -4,8 +4,6 @@ int counter = 0;
 void gaps() {
   digitalWrite(LED, HIGH);
 
-  updateLog(2);
-
   while (true) {
     Motor(50, 50);
     delay(144);
