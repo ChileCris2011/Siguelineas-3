@@ -7,15 +7,15 @@ void calibracionSensores() {
   qtr.setEmitterPin(27);
 
   // Calibración QTR
-  Serial.println("Esperando botón para calibrar QTR...");
+  elog("Esperando botón para calibrar QTR...");
   while (digitalRead(BOTON) == LOW) delay(10);
-  Serial.println("Calibrando sensores...");
+  elog("Calibrando sensores...");
   for (uint16_t i = 0; i < 150; i++) qtr.calibrate();
-  Serial.println("Listo QTR.");
+  elog("Listo QTR.");
 
   // Configuración Laser
   if (!lox.begin()) {
-    Serial.println(F("¡Error de inicio de V53L0X! Verifica las conexiones."));
+    errorLog("¡Error de inicio de V53L0X! Verifica las conexiones.");
     while (1) {
       digitalWrite(LED, HIGH);
       delay(1000);
@@ -31,8 +31,8 @@ void calibracionGiroscopio() {
   delay(200);
   byte status = mpu.begin();
   if (status != 0) {
-    Serial.print("MPU init error: ");
-    Serial.println(status);
+    errorLog("MPU init error: ", true, false);
+    errorLog(status, false)
     while (true) {
       digitalWrite(LED, HIGH);
       delay(500);
@@ -40,7 +40,7 @@ void calibracionGiroscopio() {
       delay(1000);
     }
   }
-  Serial.println("Calibrando giroscopio...");
+  elog("Calibrando giroscopio...");
   mpu.calcGyroOffsets();
-  Serial.println("Listo MPU.");
+  elog("Listo MPU.");
 }

@@ -45,8 +45,9 @@ void labirint() {
       if (lox.isRangeComplete()) {
         dishtancia = lox.readRange();
       }
-      SerialBT.println(dishtancia);
-      Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
+      elog(dishtancia)
+        updateLog(4)
+          Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
       qtr.read(sensorValues);
       if (sensorValues[0] > 3800) {
         line = true;
@@ -79,8 +80,8 @@ void labirint() {
       break;
     }
 
-    SerialBT.print("Labirint | Giro 90, ");
-    SerialBT.println(dishtancia);
+    elog("Labirint | Giro 90, ", true, false);
+    elog(dishtancia, false);
 
     girarIzquierda(84);
 
@@ -92,9 +93,9 @@ void labirint() {
       dishtancia = lox.readRange();
     }
     if (dishtancia < distDetec && dishtancia > distDetec - 25) {
-      SerialBT.print("Labirint | Giro 180, ");
-      SerialBT.println(dishtancia);
-      
+      elog("Labirint | Giro 180, ", true, false);
+      elog(dishtancia, false, true);
+
       girarDerecha(175);
     }
   }
