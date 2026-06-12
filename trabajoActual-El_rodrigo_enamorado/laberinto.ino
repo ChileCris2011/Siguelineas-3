@@ -45,9 +45,9 @@ void labirint() {
       if (lox.isRangeComplete()) {
         dishtancia = lox.readRange();
       }
-      elog(dishtancia)
-        updateLog(4)
-          Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
+      elog(dishtancia);
+      updateLog(4);
+      Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
       qtr.read(sensorValues);
       if (sensorValues[0] > 3800) {
         line = true;

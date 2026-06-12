@@ -32,16 +32,9 @@ BluetoothSerial SerialBT;
 */
 
 //variables por entender
-bool primerCuadradoIzquierda = false;
-bool primerCuadradoDerecha = false;
-bool segundoCuadradoIzquierda = false;
-bool segundoCuadradoDerecha = false;
-int contadorCasosEspeciales = 0;
-bool huboLineaCentral = false;  // flag general
 
 int marcaCuadradoDir[2] = { 0, 0 };  // hasta 2 marcas: -1 izq, +1 der
 int totalMarcasGuardadas = 0;
-bool tieneMarcaCuadrado = false;
 bool forzarProximaSemi = false;
 
 int lastMark = 0;
@@ -72,7 +65,6 @@ const int velocidadBaseDer = 130;
 const int delayBase = 144;
 const int restaBase = 30;
 const int baseGiros = 100;
-const int deteccionBase = 50;
 
 const int distEntrance = 1200;
 
@@ -84,14 +76,9 @@ int claser = 0;
 
 float target_angle = 0;  // Ángulo objetivo (recto)
 
-// ----------------- Estados
-bool escaneando = false;
-bool flagIzquierda = false, flagDerecha = false;
-int filtroBordeCount = 0;
-
 // ----------------- Tiempos
-const unsigned long tRetroceso = 350;
-const unsigned long tScan = 1000;
+const unsigned long tRetroceso = 0;
+const unsigned long tScan = 50;
 unsigned long tInicioScan = 0;
 
 // ----------------- MPU6050
@@ -120,6 +107,8 @@ void guardarMarca();
 void updateLog(int actstat = 0);
 void elog(String message, bool st = true, bool ln = true);
 void errorLog(String message, bool st = true, bool ln = true);
+void elog(int message, bool st = true, bool ln = true);
+void errorLog(int message, bool st = true, bool ln = true);
 
 void setup() {
   Serial.begin(115200);
@@ -141,7 +130,7 @@ int lecturaMM = -1;
 void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
     lecturaMM = lox.readRange();
-    elog(lecturaMM.toString());
+    elog(lecturaMM);
     if (lecturaMM < 222) {
       claser++;
     } else {
@@ -188,7 +177,10 @@ void loop() {
     lecturaMM = -1;  // No se está leyendo el sensor
   }
 
-  if (iniciomarca > vencimiento) {
+  if ((millis() - iniciomarca) > vencimiento && iniciomarca != -1) {
+    elog("Marca quemada...");
+    iniciomarca = -1;
+    lastMark = 5;
   }
 
   qtr.read(sensorValues);  // Lectura de los sensores de línea
@@ -238,43 +230,6 @@ void loop() {
   PID(position);
 }
 
-void updateLog(int actstat) {
-  for (int i = 0; i < SensorCount; i++) {
-    SerialBT.print(sensorValues[i]);
-    if (i < 7) {
-      SerialBT.print("|");
-    }
-  }
-
-  SerialBT.print("/");
-  SerialBT.print(actstat);
-  SerialBT.print("/");
-  SerialBT.print(lastMark);
-  SerialBT.print("/");
-  SerialBT.print(marcaCuadradoDir[0]);
-  SerialBT.print("|");
-  SerialBT.print(marcaCuadradoDir[1]);
-  SerialBT.print("/");
-  SerialBT.println(lecturaMM);
-}
-
-void elog(String message, bool st, bool ln) {
-  if (st) { SerialBT.print("*"); }
-  SerialBT.print(message);
-  if (ln) { SerialBT.print("*\n") }
-}
-
-void errorLog(String message, bool st, bool ln) {
-  if (st) { SerialBT.print("**"); }
-  SerialBT.print(message);
-  Serial.print(message);
-
-  if (ln) {
-    SerialBT.print("**\n");
-    Serial.print('\n')
-  }
-}
-
 void evaluarCruce() {
 
   static int contadorCruce = 0;
@@ -284,7 +239,7 @@ void evaluarCruce() {
     dentro para evitar que el PID actúe en los giros, enchuecando el robot
   */
 
-  // (1) Verificar para evitar falsos positivos
+  // (0) Verificar para evitar falsos positivos
 
   while (contadorCruce < 3) {
     qtr.read(sensorValues);
@@ -303,13 +258,21 @@ void evaluarCruce() {
   const int TH_LADO = 4000;    // extremos (0 y 7)
   const int TH_CENTRO = 4000;  // centrales (2..5) para "hay línea al frente"
 
-  Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
+  // (1) Retroceder para iniciar el escaneo (Descontinuado / Mantenido por compatibilidad con Pasito)
+
+  Motor(velocidadBaseIzq, velocidadBaseDer);
+  delay(tRetroceso);
+
+  Motor(0, 0);
+  delay(200);
 
   // (2) Avanzar ESCANEANDO para clasificar
   bool vioIzq = false, vioDer = false;
-  unsigned long t0 = millis();
+  tInicioScan = millis();
 
-  while (millis() - t0 < deteccionBase) {
+  Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
+
+  while (millis() - tInicioScan < tScan) {
     qtr.read(sensorValues);
     if (sensorValues[0] > TH_LADO) vioIzq = true;
     if (sensorValues[7] > TH_LADO) vioDer = true;
@@ -384,8 +347,8 @@ void evaluarCruce() {
     if (hayLineaFinal) {  // Si hay línea delante
 
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
-        elog("Forzando Semi...")
-          Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
+        elog("Forzando Semi...");
+        Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
         if (vioIzq) {
           giroSal(0);
@@ -438,15 +401,14 @@ void evaluarCruce() {
             elog("Preliminar Der. ", false, false);
           }
           totalMarcasGuardadas++;
+          iniciomarca = millis();
         }
       } else if (lastMark < 20 && lastMark != 3 && lastMark != 7) {
-        elog("Marca sin condicion", false, false)
-          lastMark = 4;
+        elog("Marca sin condicion", false, false);
+        lastMark = 4;
       }
 
       elog("...", false);
-
-      iniciomarca = millis();
 
       Motor(0, 0);
       delay(144);
@@ -497,7 +459,7 @@ void evaluarCruce() {
 
         elog(" (", true, false);
         elog(dir, false, false);
-        elog(", ".false, false);
+        elog(", ", false, false);
         elog((dir == 1) ? "Der)..." : "Izq)...", false);
 
         // Desplazar las marcas para que la segunda pase a ser primera

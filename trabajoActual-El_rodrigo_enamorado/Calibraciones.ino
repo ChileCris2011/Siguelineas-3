@@ -32,7 +32,7 @@ void calibracionGiroscopio() {
   byte status = mpu.begin();
   if (status != 0) {
     errorLog("MPU init error: ", true, false);
-    errorLog(status, false)
+    errorLog(status, false);
     while (true) {
       digitalWrite(LED, HIGH);
       delay(500);
