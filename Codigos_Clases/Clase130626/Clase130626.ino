@@ -53,11 +53,11 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.25, Ki = 0.0, Kd = 0.8;
+float Kp = 0.3, Ki = 0.0, Kd = 1.2;
 int lastError = 0, integral = 0;
 int umbral = 4000;
-const int velocidadBaseIzq = 130;
-const int velocidadBaseDer = 130;
+const int velocidadBaseIzq = 100;
+const int velocidadBaseDer = 100;
 
 const int delayBase = 144;
 const int restaBase = 30;
@@ -100,6 +100,7 @@ const int resolution = 8;
 
 int contlaser = 0;
 
+int prevmark = 0;
 
 void inicializarMotores();
 void Motor(int velIzq, int velDer);
@@ -168,6 +169,11 @@ void loop() {
     }
   }
 
+  if ((millis() - iniciomarca) > vencimiento && iniciomarca != -1) {
+    SerialBT.println("Marca quemada...");
+    iniciomarca = -1;
+    lastMark = 5;
+  }
 
   qtr.read(sensorValues);  // Lectura de los sensores de línea
 
@@ -331,20 +337,50 @@ void evaluarCruce() {
       }
 
       // Si NO hay forzado: guardar marca
-      if (totalMarcasGuardadas < 2 && (lastMark == 2 || lastMark == 5)) {  // Si hay menos de 2 marcas guardadas
-        SerialBT.print("Guardando Marca");
-        if (vioIzq) {
-          marcaCuadradoDir[totalMarcasGuardadas] = -1;
-          SerialBT.print(" (-1, Izq)");
-        }  // Guarda la marca en el lado que vió
-        if (vioDer) {
-          marcaCuadradoDir[totalMarcasGuardadas] = 1;
-          SerialBT.print(" (+1, Der)");
+      if (totalMarcasGuardadas < 2 && (lastMark > 20 || lastMark == 7)) {  // Si hay menos de 2 marcas guardadas y el anterior fue cruce o marca guardada
+        SerialBT.print("Evaluando marca | ");
+        if (iniciomarca > 0) {  // Si es que todavía estamos dentro del tiempo para una segunda marca
+          iniciomarca = -1;
+
+          marcaCuadradoDir[totalMarcasGuardadas] = prevmark;
+          totalMarcasGuardadas++;
+
+          if (vioIzq) {
+            marcaCuadradoDir[totalMarcasGuardadas] = -1;
+            lastMark = (prevmark = 1) ? 32 : 22;
+            SerialBT.print("Guardada!: ");
+            SerialBT.print((prevmark == 1) ? "Der | Izq" : "Izq | Izq");
+          }  // Guarda la marca en el lado que vió
+          if (vioDer) {
+            marcaCuadradoDir[totalMarcasGuardadas] = 1;
+            lastMark = (prevmark = 1) ? 33 : 23;
+            SerialBT.print("Guardada!: ");
+            SerialBT.print((prevmark == 1) ? "Der | Der" : "Izq | Der");
+          }
+          prevmark = 0;
+          totalMarcasGuardadas++;
+        } else {  // Si el temporizador no ha sido activado (no hubo primera marca)
+          if (vioIzq) {
+            prevmark = -1;
+            SerialBT.print("Preliminar Izq. ");
+          }  // Memoriza la primera marca en el lado que vió, sin guardarla aún
+          if (vioDer) {
+            prevmark = 1;
+            SerialBT.print("Preliminar Der. ");
+          }
+          iniciomarca = millis();
         }
-        totalMarcasGuardadas++;
-        lastMark = 2;
-      } else if (lastMark != 2 && lastMark != 5) {
+      } else if (lastMark < 20 && lastMark != 7) {
         SerialBT.print("Marca sin condicion");
+        lastMark = 5;
+      } else if (totalMarcasGuardadas >= 2) {
+        SerialBT.print("Exceso de marcas");
+        lastMark = 5;
+      } else {
+        SerialBT.print("WTF ");
+        SerialBT.print(lastMark);
+        SerialBT.print(" ");
+        SerialBT.print(totalMarcasGuardadas);
       }
       SerialBT.println("...");
 
@@ -434,7 +470,7 @@ void evaluarCruce() {
       Motor(40, 40);
       delay(140);
       Motor(0, 0);
-      lastMark = 5;
+      lastMark = 7;
       return;
     }
   }

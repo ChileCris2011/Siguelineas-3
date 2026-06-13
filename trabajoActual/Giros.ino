@@ -7,8 +7,6 @@ int girarDerecha(float grados, bool read) {
     mpu.update();
     anguloActual = mpu.getAngleZ();
     if (read) {
-      SerialBT.flush();
-      delayMicroseconds(500);
       qtr.read(sensorValues);
       if (sensorValues[3] > umbral || sensorValues[4] > umbral) {
         Motor(0, 0);
@@ -31,8 +29,6 @@ int girarIzquierda(float grados, bool read) {
     mpu.update();
     anguloActual = mpu.getAngleZ();
     if (read) {
-      SerialBT.flush();
-      delayMicroseconds(500);
       qtr.read(sensorValues);
       if (sensorValues[3] > umbral || sensorValues[4] > umbral) {
         Motor(0, 0);
@@ -71,24 +67,16 @@ void girarCrudo(int direccion) {
 }
 
 void giroWhile(int direccion) {
-  SerialBT.flush();
-  delayMicroseconds(500);
   qtr.read(sensorValues);
   while (sensorValues[((direccion == 1) ? 3 : 4)] < 3500) {
-    SerialBT.flush();
-    delayMicroseconds(500);
     qtr.read(sensorValues);
     girarCrudo(direccion);
   }
 }
 
 void giroSal(int direccion) {
-  SerialBT.flush();
-  delayMicroseconds(500);
   qtr.read(sensorValues);
   while (sensorValues[3] > 3500 || sensorValues[4] > 3500) {
-    SerialBT.flush();
-    delayMicroseconds(500);
     qtr.read(sensorValues);
     girarCrudo(direccion);
   }

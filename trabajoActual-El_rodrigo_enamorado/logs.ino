@@ -1,4 +1,5 @@
 void updateLog(int actstat) {
+  /*
   for (int i = 0; i < SensorCount; i++) {
     SerialBT.print(sensorValues[i]);
     if (i < 7) {
@@ -16,6 +17,9 @@ void updateLog(int actstat) {
   SerialBT.print(marcaCuadradoDir[1]);
   SerialBT.print("/");
   SerialBT.println(lecturaMM);
+  SerialBT.flush();
+  delayMicroseconds(500);
+  */
 }
 /**
   * @brief Logs debug messages to Bluetooth

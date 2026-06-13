@@ -11,8 +11,6 @@ void gaps() {
     Motor(0, 0);
     delay(100);
 
-    updateLog(2);
-
     if (counter < 2) {
       if (giroconveniente >= 0) {
         if (girarDerecha(60, true) == 1) {

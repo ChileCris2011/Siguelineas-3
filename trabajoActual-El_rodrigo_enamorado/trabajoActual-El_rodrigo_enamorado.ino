@@ -68,7 +68,7 @@ const int baseGiros = 100;
 
 const int distEntrance = 1200;
 
-const unsigned long vencimiento = 1500;
+const unsigned long vencimiento = 1000;
 unsigned long iniciomarca = -1;
 int prevmark = 0;
 
@@ -130,7 +130,7 @@ int lecturaMM = -1;
 void loop() {
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
     lecturaMM = lox.readRange();
-    elog(lecturaMM);
+    //elog(lecturaMM);
     if (lecturaMM < 222) {
       claser++;
     } else {
@@ -154,9 +154,13 @@ void loop() {
       Motor(0, 0);
       delay(200);
       girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
+      SerialBT.flush();
+      delayMicroseconds(500);
       qtr.read(sensorValues);
       while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
         updateLog(4);
+        SerialBT.flush();
+        delayMicroseconds(500);
         qtr.read(sensorValues);  // Avanza hasta detectar la línea
         Motor(50, 50);
       }
@@ -164,9 +168,13 @@ void loop() {
       delay(200);
       Motor(50, 50);  // Avanza un poco para girar bien
       delay(666);
+      SerialBT.flush();
+      delayMicroseconds(500);
       qtr.read(sensorValues);
       while (sensorValues[4] < umbral) {
         updateLog(4);
+        SerialBT.flush();
+        delayMicroseconds(500);
         qtr.read(sensorValues);
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
@@ -183,6 +191,8 @@ void loop() {
     lastMark = 5;
   }
 
+  SerialBT.flush();
+  delayMicroseconds(500);
   qtr.read(sensorValues);  // Lectura de los sensores de línea
 
   // Filtrado simple para el cálculo de posición
@@ -201,6 +211,8 @@ void loop() {
 
   // ---- NUEVO: manejo de GAPS (todo blanco) ----
 
+  SerialBT.flush();
+  delayMicroseconds(500);
   qtr.read(sensorValues);
 
   bool hasgap = true;
@@ -242,6 +254,8 @@ void evaluarCruce() {
   // (0) Verificar para evitar falsos positivos
 
   while (contadorCruce < 3) {
+    SerialBT.flush();
+    delayMicroseconds(500);
     qtr.read(sensorValues);
     if (sensorValues[0] > 4000 || sensorValues[7] > 4000) {
       contadorCruce++;
@@ -264,7 +278,7 @@ void evaluarCruce() {
   delay(tRetroceso);
 
   Motor(0, 0);
-  delay(200);
+  //delay(200);
 
   // (2) Avanzar ESCANEANDO para clasificar
   bool vioIzq = false, vioDer = false;
@@ -273,6 +287,8 @@ void evaluarCruce() {
   Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
 
   while (millis() - tInicioScan < tScan) {
+    SerialBT.flush();
+    delayMicroseconds(500);
     qtr.read(sensorValues);
     if (sensorValues[0] > TH_LADO) vioIzq = true;
     if (sensorValues[7] > TH_LADO) vioDer = true;
@@ -287,9 +303,13 @@ void evaluarCruce() {
     }
   }
 
+  SerialBT.flush();
+  delayMicroseconds(500);
   qtr.read(sensorValues);
 
   while (sensorValues[0] > TH_LADO && sensorValues[7] > TH_LADO) {
+    SerialBT.flush();
+    delayMicroseconds(500);
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
   }
@@ -300,6 +320,8 @@ void evaluarCruce() {
   Motor(0, 0);
 
   // (4) Revisar si hay línea al frente (primera lectura estática)
+  SerialBT.flush();
+  delayMicroseconds(500);
   qtr.read(sensorValues);
   bool hayLineaFinal = false;
   for (int i = 2; i <= 4; i++) {
@@ -406,6 +428,8 @@ void evaluarCruce() {
       } else if (lastMark < 20 && lastMark != 3 && lastMark != 7) {
         elog("Marca sin condicion", false, false);
         lastMark = 4;
+      } else if (totalMarcasGuardadas >= 2) {
+        
       }
 
       elog("...", false);
@@ -479,6 +503,7 @@ void evaluarCruce() {
       } else {  // Si no hay marcas guardadas
         //No hay cuadrado, por lo tanto es el final
         elog("¡Final!");
+        SerialBT.println("4095|4095|4095|4095|4095|4095|4095|4095/-1/0/0|0/0");
         Motor(0, 0);
         delay(500);  // Se detiene
         for (int i = 0; i < 3; i++) {
@@ -487,7 +512,6 @@ void evaluarCruce() {
           digitalWrite(LED, LOW);
           delay(500);
         }
-        SerialBT.println("4095|4095|4095|4095|4095|4095|4095|4095/-1/0/0|0/0");
         while (true) {}  // fin
       }
     } else {  // Intersección con línea delante
