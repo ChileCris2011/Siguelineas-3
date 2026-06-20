@@ -1,13 +1,3 @@
-/************************************************************************
-*                                                                       *
-*    SigueLineas |3|, 2026. Por el equipo |30| (treinta absoluto)       *
-*                                                                       *
-*    Para nuestros compañeros de clases y los demás equipos.            *
-*                                                                       *
-*    Recoleta, 2026. Licencia MIT (c) 2025 Ccris                        *
-*                                                                       *
-************************************************************************/
-
 // Pines motores
 #include "Pines.h"
 
@@ -32,12 +22,19 @@ BluetoothSerial SerialBT;
 */
 
 //variables por entender
+bool primerCuadradoIzquierda = false;
+bool primerCuadradoDerecha = false;
+bool segundoCuadradoIzquierda = false;
+bool segundoCuadradoDerecha = false;
+int contadorCasosEspeciales = 0;
+bool huboLineaCentral = false;  // flag general
 
 int marcaCuadradoDir[2] = { 0, 0 };  // hasta 2 marcas: -1 izq, +1 der
 int totalMarcasGuardadas = 0;
+bool tieneMarcaCuadrado = false;
 bool forzarProximaSemi = false;
 
-int lastMark = 0;
+int lastMark = -1;
 
 bool blockLabirint = false;
 
@@ -56,29 +53,35 @@ QTRSensors qtr;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // ----------------- PID (modo normal)
-float Kp = 0.25, Ki = 0.0, Kd = 0.8;
+float Kp = 0.25, Ki = 0.0, Kd = 1;
 int lastError = 0, integral = 0;
 int umbral = 4000;
 const int velocidadBaseIzq = 100;
 const int velocidadBaseDer = 100;
 
-const int delayBase = 144;
+const int delayBase = 222;
 const int restaBase = 30;
 const int baseGiros = 100;
+const int deteccionBase = 50;
 
 const int distEntrance = 1200;
 
-const unsigned long vencimiento = 1000;
-unsigned long iniciomarca = -1;
-int prevmark = 0;
+const long vencimiento = 2000;  // 15s
+
+long iniciomarca = -1;
 
 int claser = 0;
 
 float target_angle = 0;  // Ángulo objetivo (recto)
 
+// ----------------- Estados
+bool escaneando = false;
+bool flagIzquierda = false, flagDerecha = false;
+int filtroBordeCount = 0;
+
 // ----------------- Tiempos
-const unsigned long tRetroceso = 0;
-const unsigned long tScan = 50;
+const unsigned long tRetroceso = 350;
+const unsigned long tScan = 1000;
 unsigned long tInicioScan = 0;
 
 // ----------------- MPU6050
@@ -104,11 +107,6 @@ int girarIzquierda(float grados, bool read = false);
 int girarDerecha(float grados, bool read = false);
 void PID(uint16_t position);
 void guardarMarca();
-void updateLog(int actstat = 0);
-void elog(String message, bool st = true, bool ln = true);
-void errorLog(String message, bool st = true, bool ln = true);
-void elog(int message, bool st = true, bool ln = true);
-void errorLog(int message, bool st = true, bool ln = true);
 
 void setup() {
   Serial.begin(115200);
@@ -125,20 +123,18 @@ void setup() {
   calibracionGiroscopio();
 }
 
-int lecturaMM = -1;
-
 void loop() {
+  /*
   if (puedeLaser && !blockLaser && lox.isRangeComplete()) {
-    lecturaMM = lox.readRange();
-    //elog(lecturaMM);
+    int lecturaMM = lox.readRange();
+    SerialBT.println(lecturaMM);
     if (lecturaMM < 222) {
       claser++;
     } else {
       claser = 0;
     }
     if (claser > 5) {  // Detecta un objeto (~10cm)
-      elog("Laser...");
-      updateLog(4);
+      SerialBT.println("Laser...");
       Motor(-50, -50);  // Retrocede para no golpear el objeto al girar
       delay(700);
       Motor(0, 0);
@@ -154,46 +150,27 @@ void loop() {
       Motor(0, 0);
       delay(200);
       girar(evadirHacia + 1);  // Gira hacia el lado contrario (Basicamente tiene que ver con la forma en la que se maneja la función)
-      SerialBT.flush();
-      delayMicroseconds(500);
       qtr.read(sensorValues);
       while (sensorValues[3] < umbral || sensorValues[4] < umbral) {
-        updateLog(4);
-        SerialBT.flush();
-        delayMicroseconds(500);
         qtr.read(sensorValues);  // Avanza hasta detectar la línea
         Motor(50, 50);
       }
       Motor(0, 0);
       delay(200);
       Motor(50, 50);  // Avanza un poco para girar bien
-
       delay(666);
-      SerialBT.flush();
-      delayMicroseconds(500);
       qtr.read(sensorValues);
       while (sensorValues[4] < umbral) {
-        updateLog(4);
-        SerialBT.flush();
-        delayMicroseconds(500);
         qtr.read(sensorValues);
         girarCrudo(evadirHacia);  // Gira hasta acomodarse en la línea
       }
       puedeLaser = false;
       blockLaser = true;
     }
-  } else {
-    lecturaMM = -1;  // No se está leyendo el sensor
   }
+  //*/
 
-  if ((millis() - iniciomarca) > vencimiento && iniciomarca != -1) {
-    elog("Marca quemada...");
-    iniciomarca = -1;
-    lastMark = 5;
-  }       
 
-  SerialBT.flush();
-  delayMicroseconds(500);
   qtr.read(sensorValues);  // Lectura de los sensores de línea
 
   // Filtrado simple para el cálculo de posición
@@ -212,8 +189,6 @@ void loop() {
 
   // ---- NUEVO: manejo de GAPS (todo blanco) ----
 
-  SerialBT.flush();
-  delayMicroseconds(500);
   qtr.read(sensorValues);
 
   bool hasgap = true;
@@ -237,8 +212,6 @@ void loop() {
   // Disparador de cruce por extremos
   if (sensorValues[0] > 4000 || sensorValues[7] > 4000) evaluarCruce();
 
-  updateLog(forzarProximaSemi ? 1 : 0);
-
   // Seguimiento de línea normal
   PID(position);
 }
@@ -252,11 +225,9 @@ void evaluarCruce() {
     dentro para evitar que el PID actúe en los giros, enchuecando el robot
   */
 
-  // (0) Verificar para evitar falsos positivos
+  // (1) Verificar para evitar falsos positivos
 
   while (contadorCruce < 3) {
-    SerialBT.flush();
-    delayMicroseconds(500);
     qtr.read(sensorValues);
     if (sensorValues[0] > 4000 || sensorValues[7] > 4000) {
       contadorCruce++;
@@ -267,29 +238,17 @@ void evaluarCruce() {
     }
   }
 
-  SerialBT.println("=");
-
   // Umbrales
   const int TH_LADO = 4000;    // extremos (0 y 7)
   const int TH_CENTRO = 4000;  // centrales (2..5) para "hay línea al frente"
 
-  // (1) Retroceder para iniciar el escaneo (Descontinuado / Mantenido por compatibilidad con Pasito)
-
-  Motor(velocidadBaseIzq, velocidadBaseDer);
-  delay(tRetroceso);
-
-  Motor(0, 0);
-  //delay(200);
+  Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
 
   // (2) Avanzar ESCANEANDO para clasificar
   bool vioIzq = false, vioDer = false;
-  tInicioScan = millis();
+  unsigned long t0 = millis();
 
-  Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
-
-  while (millis() - tInicioScan < tScan) {
-    SerialBT.flush();
-    delayMicroseconds(500);
+  while (millis() - t0 < deteccionBase) {
     qtr.read(sensorValues);
     if (sensorValues[0] > TH_LADO) vioIzq = true;
     if (sensorValues[7] > TH_LADO) vioDer = true;
@@ -304,13 +263,14 @@ void evaluarCruce() {
     }
   }
 
-  SerialBT.flush();
-  delayMicroseconds(500);
+  SerialBT.print("vioIzq = ");
+  SerialBT.print(vioIzq);
+  SerialBT.print("\t vioDer = ");
+  SerialBT.print(vioDer);
+
   qtr.read(sensorValues);
 
-  while (sensorValues[0] > TH_LADO && sensorValues[7] > TH_LADO) {
-    SerialBT.flush();
-    delayMicroseconds(500);
+  while (sensorValues[0] > TH_LADO || sensorValues[7] > TH_LADO) {
     qtr.read(sensorValues);
     Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
   }
@@ -321,8 +281,6 @@ void evaluarCruce() {
   Motor(0, 0);
 
   // (4) Revisar si hay línea al frente (primera lectura estática)
-  SerialBT.flush();
-  delayMicroseconds(500);
   qtr.read(sensorValues);
   bool hayLineaFinal = false;
   for (int i = 2; i <= 4; i++) {
@@ -332,7 +290,10 @@ void evaluarCruce() {
     }
   }
 
-  // (5) Revisar la distancia delante (lectura estática final)
+  SerialBT.print("\t Hay Linea = ");
+  SerialBT.print(hayLineaFinal);
+
+  /*/ (5) Revisar la distancia delante (lectura estática final)
 
   int distLab = 0;
 
@@ -340,28 +301,9 @@ void evaluarCruce() {
     distLab = lox.readRange();
   }
 
-  SerialBT.print(hayLineaFinal ? "1" : "0");
-  SerialBT.print("|");
-  SerialBT.print(vioIzq ? "1" : "0");
-  SerialBT.print("|");
-  SerialBT.print(vioDer ? "1" : "0");
-  SerialBT.print("|");
+  SerialBT.print("\t distLab = ");
   SerialBT.println(distLab);
-
-  delay(200);
-
-  SerialBT.println("=");
-
-  delay(200);
-
-  elog("vioIzq = ", true, false);
-  elog(vioIzq, false, false);
-  elog("\t vioDer = ", false, false);
-  elog(vioDer, false, false);
-  elog("\t Hay Linea = ", false, false);
-  elog(hayLineaFinal, false, false);
-  elog("\t distLab = ", false, false);
-  elog(distLab, false);
+  //*/
 
   // (6) Tomar decisión
 
@@ -370,7 +312,7 @@ void evaluarCruce() {
     if (hayLineaFinal) {  // Si hay línea delante
 
       if (forzarProximaSemi) {  // Si tiene que forzar la salida
-        elog("Forzando Semi...");
+        SerialBT.println("Forzando Semi...");
         Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
         if (vioIzq) {
@@ -392,55 +334,29 @@ void evaluarCruce() {
       }
 
       // Si NO hay forzado: guardar marca
-      if (totalMarcasGuardadas < 2 && (lastMark > 20 || lastMark == 7)) {  // Si hay menos de 2 marcas guardadas y el anterior fue cruce o marca guardada
-        elog("Evaluando marca | ", true, false);
-        if (iniciomarca > 0) {  // Si es que todavía estamos dentro del tiempo para una segunda marca
-          iniciomarca = -1;
-
-          marcaCuadradoDir[totalMarcasGuardadas] = prevmark;
-          totalMarcasGuardadas++;
-
-          if (vioIzq) {
-            marcaCuadradoDir[totalMarcasGuardadas] = -1;
-            lastMark = (prevmark = 1) ? 32 : 22;
-            elog("Guardada!: ", false, false);
-            elog((prevmark = 1) ? "Der | Izq" : "Izq | Izq");
-          }  // Guarda la marca en el lado que vió
-          if (vioDer) {
-            marcaCuadradoDir[totalMarcasGuardadas] = 1;
-            lastMark = (prevmark = 1) ? 33 : 23;
-            elog("Guardada!: ", false, false);
-            elog((prevmark = 1) ? "Der | Der" : "Izq | Der");
-          }
-          prevmark = 0;
-          totalMarcasGuardadas++;
-        } else {  // Si el temporizador no ha sido activado (no hubo primera marca)
-          if (vioIzq) {
-            prevmark = -1;
-            elog("Preliminar Izq. ", false, false);
-          }  // Memoriza la primera marca en el lado que vió, sin guardarla aún
-          if (vioDer) {
-            prevmark = 1;
-            elog("Preliminar Der. ", false, false);
-          }
-          totalMarcasGuardadas++;
-          iniciomarca = millis();
+      if (totalMarcasGuardadas < 2 && (lastMark == 2 || lastMark == 5)) {  // Si hay menos de 2 marcas guardadas
+        SerialBT.print("Guardando Marca");
+        if (vioIzq) {
+          marcaCuadradoDir[totalMarcasGuardadas] = -1;
+          SerialBT.print(" (-1, Izq)");
+        }  // Guarda la marca en el lado que vió
+        if (vioDer) {
+          marcaCuadradoDir[totalMarcasGuardadas] = 1;
+          SerialBT.print(" (+1, Der)");
         }
-      } else if (lastMark < 20 && lastMark != 3 && lastMark != 7) {
-        elog("Marca sin condicion", false, false);
-        lastMark = 4;
-      } else if (totalMarcasGuardadas >= 2) {
-        
+        totalMarcasGuardadas++;
+        lastMark = 2;
+      } else if (lastMark != 2 && lastMark != 5) {
+        SerialBT.print("Marca sin condicion");
       }
-
-      elog("...", false);
+      SerialBT.println("...");
 
       Motor(0, 0);
       delay(144);
       return;  // volver al PID
     } else {
       // SEMI sin línea → giro normal inmediato
-      elog("Giro 90...");
+      SerialBT.println("Giro 90...");
       Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
       delay(delayBase);
       // puedeLaser = true;
@@ -449,7 +365,7 @@ void evaluarCruce() {
         Motor(0, 0);
         delay(200);
         giroWhile(0);
-        lastMark = 6;
+        lastMark = 3;
         return;
       }
       if (vioDer) {
@@ -457,7 +373,7 @@ void evaluarCruce() {
         Motor(0, 0);
         delay(200);
         giroWhile(1);
-        lastMark = 6;
+        lastMark = 3;
         return;
       }
     }
@@ -469,7 +385,7 @@ void evaluarCruce() {
 
       /*
         if (distLab < distEntrance && !blockLabirint) {
-        elog("Laberinto...");
+        SerialBT.println("Laberinto...");
         Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
         delay(delayBase);
         labirint();
@@ -479,13 +395,13 @@ void evaluarCruce() {
       */
 
       if (totalMarcasGuardadas > 0) {  // Si hay marcas guardadas (Hay cuadrado)
-        elog("Cuadrado ");
+        SerialBT.print("Cuadrado ");
         int dir = marcaCuadradoDir[0];
 
-        elog(" (", true, false);
-        elog(dir, false, false);
-        elog(", ", false, false);
-        elog((dir == 1) ? "Der)..." : "Izq)...", false);
+        SerialBT.print(" (");
+        SerialBT.print(dir);
+        SerialBT.print(", ");
+        SerialBT.println((dir == 1) ? "Der)..." : "Izq)...");
 
         // Desplazar las marcas para que la segunda pase a ser primera
         for (int i = 0; i < totalMarcasGuardadas - 1; i++) {
@@ -496,15 +412,15 @@ void evaluarCruce() {
         // Ejecutar el giro
         Motor(velocidadBaseIzq - restaBase, velocidadBaseDer - restaBase);
         delay(delayBase);
-        if (dir == 1) giroWhile(1);
-        else giroWhile(0);
+        if (dir == 1) girar(1);
+        else girar(0);
 
         forzarProximaSemi = true;  // Forzar la salida (En una semi (90°) con línea delante)
+        lastMark = 4;
         return;
       } else {  // Si no hay marcas guardadas
         //No hay cuadrado, por lo tanto es el final
-        elog("¡Final!");
-        SerialBT.println("4095|4095|4095|4095|4095|4095|4095|4095/-1/0/0|0/0");
+        SerialBT.println("¡Final!");
         Motor(0, 0);
         delay(500);  // Se detiene
         for (int i = 0; i < 3; i++) {
@@ -517,11 +433,11 @@ void evaluarCruce() {
       }
     } else {  // Intersección con línea delante
       // Se puede saltar con normalidad (espero...)
-      elog("Cruce...");
+      SerialBT.println("Cruce...");
       Motor(40, 40);
       delay(140);
       Motor(0, 0);
-      lastMark = 7;
+      lastMark = 5;
       return;
     }
   }
@@ -533,12 +449,9 @@ void evaluarCruce() {
     Aunque es raro...
     ¡No te preocupes, probablemente no sea el robot!
     Sino el programador...
-
-    Okay, es mentira. La mayoría de veces es solo un rayo cósmico... tal vez...
   */
 
-  elog("Nada conluyente...");
+  SerialBT.println("Nada concluyente...");
 
   Motor(velocidadBaseIzq - (velocidadBaseIzq - 10), velocidadBaseDer - (velocidadBaseDer - 10));
-  lastMark = -1;
 }

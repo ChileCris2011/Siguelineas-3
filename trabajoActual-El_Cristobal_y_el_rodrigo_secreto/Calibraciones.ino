@@ -13,7 +13,7 @@ void calibracionSensores() {
   for (uint16_t i = 0; i < 150; i++) qtr.calibrate();
   Serial.println("Listo QTR.");
 
-  // Configuración Laser
+  /* Configuración Laser
   if (!lox.begin()) {
     Serial.println(F("¡Error de inicio de V53L0X! Verifica las conexiones."));
     while (1) {
@@ -24,7 +24,7 @@ void calibracionSensores() {
     }
   }
   lox.startRangeContinuous();  // Empieza la lectura contínua del láser
-  Serial.println(F("Listo L0X"));
+  //*/
 }
 void calibracionGiroscopio() {
   // Configuración MPU
