@@ -269,15 +269,33 @@ void evaluarCruce() {
   bool rverde = false;
   bool lverde = false;
 
-  if (c1 > 1 && c1 < 10) {
+  if (c1 > 1000 && c1 < 5000) {
     digitalWrite(LED, HIGH);
     lverde = true;
   }
 
-  if (c2 > 1 && c2 < 10) {
+  if (c2 > 1000 && c2 < 3500) {
     digitalWrite(LED, HIGH);
     rverde = true;
   }
+
+  SerialBT.print("| Color: : ");
+  SerialBT.print(r1);
+  SerialBT.print(", ");
+  SerialBT.print(g1);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
+  SerialBT.print(r2);
+  SerialBT.print(", ");
+  SerialBT.print(g2);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
 
   // Umbrales
   const int TH_LADO = 4000;    // extremos (0 y 7)
@@ -335,6 +353,103 @@ void evaluarCruce() {
 
   SerialBT.print("\t Hay Linea = ");
   SerialBT.print(hayLineaFinal);
+
+  Motor(0, 0);
+  delay(200);
+
+  // Revisar el color debajo
+  r1, g1, b1, c1;
+  muxSelect(CANAL_SENSOR_1);
+  rgb1.getRawData(&r1, &g1, &b1, &c1);
+
+  delay(200);
+
+  r2, g2, b2, c2;
+  muxSelect(CANAL_SENSOR_2);
+  rgb2.getRawData(&r2, &g2, &b2, &c2);
+
+  rverde = false;
+  lverde = false;
+
+  if (c1 > 1000 && c1 < 5000) {
+    digitalWrite(LED, HIGH);
+    lverde = true;
+  }
+
+  if (c2 > 1000 && c2 < 3500) {
+    digitalWrite(LED, HIGH);
+    rverde = true;
+  }
+
+  SerialBT.print("| Color: : ");
+  SerialBT.print(r1);
+  SerialBT.print(", ");
+  SerialBT.print(g1);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
+  SerialBT.print(r2);
+  SerialBT.print(", ");
+  SerialBT.print(g2);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
+
+  Motor(velocidadBaseIzq, velocidadBaseDer);
+  delay(500);
+
+  Motor(0, 0);
+  delay(200);
+
+  // Revisar el color debajo
+  r1, g1, b1, c1;
+  muxSelect(CANAL_SENSOR_1);
+  rgb1.getRawData(&r1, &g1, &b1, &c1);
+
+  delay(200);
+
+  r2, g2, b2, c2;
+  muxSelect(CANAL_SENSOR_2);
+  rgb2.getRawData(&r2, &g2, &b2, &c2);
+
+  rverde = false;
+  lverde = false;
+
+  if (c1 > 1000 && c1 < 5000) {
+    digitalWrite(LED, HIGH);
+    lverde = true;
+  }
+
+  if (c2 > 1000 && c2 < 3500) {
+    digitalWrite(LED, HIGH);
+    rverde = true;
+  }
+
+  Motor(0, 0);
+
+  SerialBT.print("| Color: : ");
+  SerialBT.print(r1);
+  SerialBT.print(", ");
+  SerialBT.print(g1);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
+  SerialBT.print(r2);
+  SerialBT.print(", ");
+  SerialBT.print(g2);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
+
+  while (digitalRead(BOTON) == LOW) {}
 
   /*/ (5) Revisar la distancia delante (lectura estática final)
 
