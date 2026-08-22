@@ -16,7 +16,7 @@ uint16_t sensorValues[SensorCount];
 
 void setup() {
   inicializarQTR(); 
-  SerialBT.begin("|3|");
+  SerialBT.begin("|3|2");
   while (digitalRead(BOTON) == 0) {
   }
   for (int i = 0; i < 100; i++) {
