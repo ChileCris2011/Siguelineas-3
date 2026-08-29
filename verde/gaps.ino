@@ -95,7 +95,11 @@ void gaps() {
   Motor(50, 50);
   delay(200);
 
+  Motor(0, 0);
+  delay(500);
+
   counter = 0;
 
   digitalWrite(LED, LOW);
+  delay(200);
 }

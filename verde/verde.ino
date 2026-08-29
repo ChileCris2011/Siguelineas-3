@@ -10,6 +10,14 @@
 
 #include <BluetoothSerial.h>
 
+// AQUI VAN LOS UMBRALES DE COLORES. SI NECESITAS CAMBIAR LA LOGICA (no lo hagas si no lo he dicho) linea 260
+// CALIBRA TODOS LOS VALORES DEBUGUEANDO CON ESTE CODIGO Y CON PRUEBA_COLOR (estático)
+
+int verdeMenorQue = 185;
+int verdeMayorQue = 100;
+
+int rojoMenorQue = 100; // En caso de la rampa (falso positivo), rojo es mayor a 100 (en practicas) y verde verdadero es menor
+
 BluetoothSerial SerialBT;
 
 /*
@@ -61,10 +69,10 @@ int umbral = 4000;
 const int velocidadBaseIzq = 95;
 const int velocidadBaseDer = 100;
 
-const int delayBase = 188;
+const int delayBase = 145;
 const int restaBase = 40;
 const int baseGiros = 100;
-const int deteccionBase = 45;
+const int deteccionBase = 120;
 
 const int distEntrance = 1200;
 
@@ -99,8 +107,8 @@ float yawZero = 0.0;
 
 // Ambos sensores usan la misma dirección I2C (0x29),
 // pero al estar en canales distintos del mux no hay conflicto.
-Adafruit_TCS34725 rgb1 = Adafruit_TCS34725(0xFF, TCS34725_GAIN_1X);
-Adafruit_TCS34725 rgb2 = Adafruit_TCS34725(0xFF, TCS34725_GAIN_1X);
+Adafruit_TCS34725 rgb1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 rgb2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
 
 // ----------------- Flags de marca
 bool marcaPrimeraIzq = false;
@@ -269,15 +277,34 @@ void evaluarCruce() {
   bool rverde = false;
   bool lverde = false;
 
-  if (c1 > 1 && c1 < 10) {
+  if (g1 > verdeMayorQue && g1 < verdeMenorQue && r1 < rojoMenorQue) {
+    digitalWrite(LED, HIGH);
+    rverde = true;
+  }
+
+  if (g2 > verdeMayorQue && g2 < verdeMenorQue && r2 < rojoMenorQue) {
     digitalWrite(LED, HIGH);
     lverde = true;
   }
 
-  if (c2 > 1 && c2 < 10) {
-    digitalWrite(LED, HIGH);
-    rverde = true;
-  }
+  SerialBT.print("| Color: : ");
+  SerialBT.print(r1);
+  SerialBT.print(", ");
+  SerialBT.print(g1);
+  SerialBT.print(", ");
+  SerialBT.print(b1);
+  SerialBT.print(", ");
+  SerialBT.print(c1);
+  SerialBT.print(" | ");
+
+  SerialBT.print(r2);
+  SerialBT.print(", ");
+  SerialBT.print(g2);
+  SerialBT.print(", ");
+  SerialBT.print(b2);
+  SerialBT.print(", ");
+  SerialBT.print(c2);
+  SerialBT.print(" | ");
 
   // Umbrales
   const int TH_LADO = 4000;    // extremos (0 y 7)
@@ -289,15 +316,17 @@ void evaluarCruce() {
   bool vioIzq = false, vioDer = false;
   unsigned long t0 = millis();
 
+  int mDer = 0;
+  int mIzq = 0;
+
   while (millis() - t0 < deteccionBase) {
     qtr.read(sensorValues);
+
+    if (sensorValues[0] > mIzq) mIzq = sensorValues[0];
+    if (sensorValues[7] > mDer) mDer = sensorValues[7];
+
     if (sensorValues[0] > TH_LADO) vioIzq = true;
     if (sensorValues[7] > TH_LADO) vioDer = true;
-    for (int i = 2; i <= 4; i++) {
-      if (sensorValues[i] > TH_CENTRO) {
-        break;
-      }
-    }
 
     if (vioIzq && vioDer) {
       break;
@@ -306,8 +335,13 @@ void evaluarCruce() {
 
   SerialBT.print("vioIzq = ");
   SerialBT.print(vioIzq);
-  SerialBT.print("\t vioDer = ");
+  SerialBT.print("(");
+  SerialBT.print(mIzq);
+  SerialBT.print(")\t vioDer = ");
   SerialBT.print(vioDer);
+  SerialBT.print("(");
+  SerialBT.print(mDer);
+  SerialBT.print(")");
 
   //Avanzar hasta blanco
 
@@ -352,24 +386,6 @@ void evaluarCruce() {
 
   // (6) Tomar decisión
 
-  if (lverde && rverde) {
-    digitalWrite(LED, LOW);
-    delay(200);
-    digitalWrite(LED, HIGH);
-    delay(200);
-    Motor(-velocidadBaseIzq, -velocidadBaseDer);
-    delay(500);
-    Motor(0, 0);
-    giroSal(evadirHacia);
-    Motor(0, 0);
-    delay(200);
-    giroWhile(evadirHacia);
-    Motor(0, 0);
-    delay(500);
-    digitalWrite(LED, LOW);
-    return;
-  }
-
   // --- SEMI-INTERSECCIÓN (solo un lado) ---
   if (vioIzq ^ vioDer) {  // Si SOLO vio UN lado
     if (hayLineaFinal) {  // Si hay línea delante
@@ -397,6 +413,7 @@ void evaluarCruce() {
       }
 
       if (lverde) {
+        SerialBT.println("VERDE izq");
         giroSal(0);
         Motor(0, 0);
         delay(200);
@@ -407,6 +424,7 @@ void evaluarCruce() {
       }
 
       if (rverde) {
+        SerialBT.println("VERDE der");
         giroSal(1);
         Motor(0, 0);
         delay(200);
@@ -469,7 +487,27 @@ void evaluarCruce() {
   // --- INTERSECCIÓN COMPLETA (ambos lados) ---
   if (vioIzq && vioDer) {
 
+    if (lverde && rverde) {
+      SerialBT.println("VERDE 180");
+      digitalWrite(LED, LOW);
+      delay(200);
+      digitalWrite(LED, HIGH);
+      delay(200);
+      Motor(-velocidadBaseIzq, -velocidadBaseDer);
+      delay(500);
+      Motor(0, 0);
+      giroSal(evadirHacia);
+      Motor(0, 0);
+      delay(200);
+      giroWhile(evadirHacia);
+      Motor(0, 0);
+      delay(500);
+      digitalWrite(LED, LOW);
+      return;
+    }
+
     if (lverde) {
+      SerialBT.println("VERDE izq");
       giroSal(0);
       Motor(0, 0);
       delay(200);
@@ -480,6 +518,7 @@ void evaluarCruce() {
     }
 
     if (rverde) {
+      SerialBT.println("VERDE der");
       giroSal(1);
       Motor(0, 0);
       delay(200);

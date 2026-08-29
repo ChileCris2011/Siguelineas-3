@@ -13,8 +13,8 @@
 
 // Ambos sensores usan la misma dirección I2C (0x29),
 // pero al estar en canales distintos del mux no hay conflicto.
-Adafruit_TCS34725 rgb1 = Adafruit_TCS34725(10, TCS34725_GAIN_1X);
-Adafruit_TCS34725 rgb2 = Adafruit_TCS34725(10, TCS34725_GAIN_1X);
+Adafruit_TCS34725 rgb1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 rgb2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
 
 #include <BluetoothSerial.h>
 

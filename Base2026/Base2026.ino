@@ -246,6 +246,7 @@ void evaluarCruce() {
     qtr.read(sensorValues);
     if (sensorValues[0] > TH_LADO) vioIzq = true;
     if (sensorValues[7] > TH_LADO) vioDer = true;
+    
     for (int i = 2; i <= 4; i++) {
       if (sensorValues[i] > TH_CENTRO) {
         break;

@@ -99,8 +99,8 @@ float yawZero = 0.0;
 
 // Ambos sensores usan la misma dirección I2C (0x29),
 // pero al estar en canales distintos del mux no hay conflicto.
-Adafruit_TCS34725 rgb1 = Adafruit_TCS34725(0xFF, TCS34725_GAIN_1X);
-Adafruit_TCS34725 rgb2 = Adafruit_TCS34725(0xFF, TCS34725_GAIN_1X);
+Adafruit_TCS34725 rgb1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 rgb2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
 
 // ----------------- Flags de marca
 bool marcaPrimeraIzq = false;
@@ -253,14 +253,14 @@ void evaluarCruce() {
 
   delay(20);
   Motor(0, 0);
-  delay(200);
+  delay(1000);
 
   // Revisar el color debajo
   uint16_t r1, g1, b1, c1;
   muxSelect(CANAL_SENSOR_1);
   rgb1.getRawData(&r1, &g1, &b1, &c1);
 
-  delay(200);
+  delay(1000);
 
   uint16_t r2, g2, b2, c2;
   muxSelect(CANAL_SENSOR_2);
@@ -288,13 +288,14 @@ void evaluarCruce() {
   SerialBT.print(", ");
   SerialBT.print(c1);
   SerialBT.print(" | ");
+
   SerialBT.print(r2);
   SerialBT.print(", ");
   SerialBT.print(g2);
   SerialBT.print(", ");
-  SerialBT.print(b1);
+  SerialBT.print(b2);
   SerialBT.print(", ");
-  SerialBT.print(c1);
+  SerialBT.print(c2);
   SerialBT.print(" | ");
 
   // Umbrales
@@ -390,13 +391,14 @@ void evaluarCruce() {
   SerialBT.print(", ");
   SerialBT.print(c1);
   SerialBT.print(" | ");
+
   SerialBT.print(r2);
   SerialBT.print(", ");
   SerialBT.print(g2);
   SerialBT.print(", ");
-  SerialBT.print(b1);
+  SerialBT.print(b2);
   SerialBT.print(", ");
-  SerialBT.print(c1);
+  SerialBT.print(c2);
   SerialBT.print(" | ");
 
   Motor(velocidadBaseIzq, velocidadBaseDer);
@@ -440,13 +442,14 @@ void evaluarCruce() {
   SerialBT.print(", ");
   SerialBT.print(c1);
   SerialBT.print(" | ");
+
   SerialBT.print(r2);
   SerialBT.print(", ");
   SerialBT.print(g2);
   SerialBT.print(", ");
-  SerialBT.print(b1);
+  SerialBT.print(b2);
   SerialBT.print(", ");
-  SerialBT.print(c1);
+  SerialBT.print(c2);
   SerialBT.print(" | ");
 
   while (digitalRead(BOTON) == LOW) {}
