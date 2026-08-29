@@ -13,10 +13,12 @@
 // AQUI VAN LOS UMBRALES DE COLORES. SI NECESITAS CAMBIAR LA LOGICA (no lo hagas si no lo he dicho) linea 260
 // CALIBRA TODOS LOS VALORES DEBUGUEANDO CON ESTE CODIGO Y CON PRUEBA_COLOR (estático)
 
+bool haceColor = true;  // Si no haces color, setea esta variable a false
+
 int verdeMenorQue = 185;
 int verdeMayorQue = 100;
 
-int rojoMenorQue = 100; // En caso de la rampa (falso positivo), rojo es mayor a 100 (en practicas) y verde verdadero es menor
+int rojoMenorQue = 100;  // En caso de la rampa (falso positivo), rojo es mayor a 100 (en practicas) y verde verdadero es menor
 
 BluetoothSerial SerialBT;
 
@@ -263,48 +265,51 @@ void evaluarCruce() {
   Motor(0, 0);
   delay(200);
 
-  // Revisar el color debajo
-  uint16_t r1, g1, b1, c1;
-  muxSelect(CANAL_SENSOR_1);
-  rgb1.getRawData(&r1, &g1, &b1, &c1);
-
-  delay(200);
-
-  uint16_t r2, g2, b2, c2;
-  muxSelect(CANAL_SENSOR_2);
-  rgb2.getRawData(&r2, &g2, &b2, &c2);
-
   bool rverde = false;
   bool lverde = false;
 
-  if (g1 > verdeMayorQue && g1 < verdeMenorQue && r1 < rojoMenorQue) {
-    digitalWrite(LED, HIGH);
-    rverde = true;
+  if (haceColor) {
+
+    // Revisar el color debajo
+    uint16_t r1, g1, b1, c1;
+    muxSelect(CANAL_SENSOR_1);
+    rgb1.getRawData(&r1, &g1, &b1, &c1);
+
+    delay(200);
+
+    uint16_t r2, g2, b2, c2;
+    muxSelect(CANAL_SENSOR_2);
+    rgb2.getRawData(&r2, &g2, &b2, &c2);
+
+    if (g1 > verdeMayorQue && g1 < verdeMenorQue && r1 < rojoMenorQue) {
+      digitalWrite(LED, HIGH);
+      rverde = true;
+    }
+
+    if (g2 > verdeMayorQue && g2 < verdeMenorQue && r2 < rojoMenorQue) {
+      digitalWrite(LED, HIGH);
+      lverde = true;
+    }
+
+    SerialBT.print("| Color: : ");
+    SerialBT.print(r1);
+    SerialBT.print(", ");
+    SerialBT.print(g1);
+    SerialBT.print(", ");
+    SerialBT.print(b1);
+    SerialBT.print(", ");
+    SerialBT.print(c1);
+    SerialBT.print(" | ");
+
+    SerialBT.print(r2);
+    SerialBT.print(", ");
+    SerialBT.print(g2);
+    SerialBT.print(", ");
+    SerialBT.print(b2);
+    SerialBT.print(", ");
+    SerialBT.print(c2);
+    SerialBT.print(" | ");
   }
-
-  if (g2 > verdeMayorQue && g2 < verdeMenorQue && r2 < rojoMenorQue) {
-    digitalWrite(LED, HIGH);
-    lverde = true;
-  }
-
-  SerialBT.print("| Color: : ");
-  SerialBT.print(r1);
-  SerialBT.print(", ");
-  SerialBT.print(g1);
-  SerialBT.print(", ");
-  SerialBT.print(b1);
-  SerialBT.print(", ");
-  SerialBT.print(c1);
-  SerialBT.print(" | ");
-
-  SerialBT.print(r2);
-  SerialBT.print(", ");
-  SerialBT.print(g2);
-  SerialBT.print(", ");
-  SerialBT.print(b2);
-  SerialBT.print(", ");
-  SerialBT.print(c2);
-  SerialBT.print(" | ");
 
   // Umbrales
   const int TH_LADO = 4000;    // extremos (0 y 7)
