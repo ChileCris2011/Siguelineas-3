@@ -40,12 +40,13 @@ int totalDireccionesCuadrado = 0;
 bool forzarSalidaCuadradoEnSemi = false;
 
 // Ultimo evento reconocido. Se usa para distinguir marcas del cuadrado de cruces normales.
-const int EVENTO_NINGUNO = -1;
-const int EVENTO_SALIDA_CUADRADO = 1;
-const int EVENTO_MARCA_CUADRADO = 2;
-const int EVENTO_GIRO_90 = 3;
-const int EVENTO_ENTRADA_CUADRADO = 4;
-const int EVENTO_CRUCE_RECTO = 5;
+#define EVENTO_NINGUNO -1
+#define EVENTO_SALIDA_CUADRADO 1
+#define EVENTO_MARCA_CUADRADO 2
+#define EVENTO_GIRO_90 3
+#define EVENTO_ENTRADA_CUADRADO 4
+#define EVENTO_CRUCE_RECTO 5
+
 int ultimoEventoPista = EVENTO_NINGUNO;
 
 bool laberintoYaResuelto = false;
